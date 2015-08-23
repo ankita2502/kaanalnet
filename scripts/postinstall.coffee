@@ -1,48 +1,36 @@
 #verify the required debian packages are installed in the system
 
+util = require 'util'
+exec = require('child_process').exec
+
+dpkgquery = (command,callback) ->
+	callback false unless command?
+	command = "dpkg-query -s #{command}"
+	util.log "executing #{command}..."        
+	exec command, (error, stdout, stderr) =>
+		#util.log "execute - Error : " + error
+		#util.log "execute - stdout : " + stdout
+		#util.log "execute - stderr : " + stderr
+		
+		if error?
+			callback false
+		else			
+			callback true
+
 
 config = require('../package.json').config
 
-for pack in config.debianpackages.virtualization.lxc
-	console.log "virtualization" + pack
+console.log "=========================================================="
+for pack1 in config.debianpackages.virtualization.lxc
+	dpkgquery pack1,(result)->
+		console.log "#{pack1}  :  " + result
+	
+for pack2 in config.debianpackages.switch.linuxbridge
+	dpkgquery pack2,(result)->
+		console.log "#{pack2}    : " + result
 
-for pack in config.debianpackages.switch.linuxbridge
-	console.log "switch - linuxbridge " + pack
-
-for pack in config.debianpackages.switch.openvswitch
-	console.log "switch openvswitch " + pack
-
-
-
-isLXCInstalled = ()->
-	return {"installed":"True"}
-
-
-isLinuxBridgeInsalled = ()->
-	return {"installed":"True"}
-isOpenVSWitchInstalled = ()->
-	return {"installed":"True"}
-
-lxcstatus = isLXCInstalled()
-bridgestatus = isLinuxBridgeInsalled()
-ovsstatus = isOpenVSWitchInstalled()
+for pack3 in config.debianpackages.switch.openvswitch
+	dpkgquery pack3,(result)->
+		console.log "#{pack3}    : " + result
 
 console.log "=========================================================="
-console.log "OS Details"
-console.log "======================="
-console.log "Operating System ": 
-console.log "processor" :
-
-
-console.log "=========================================================="
-console.log "virtualization Support"
-console.log "======================="
-console.log "LXC : " + JSON.stringify lxcstatus
-console.log "=========================================================="
-console.log "switches support"
-console.log "======================="
-console.log "linuxbridge : " + JSON.stringify  bridgestatus
-console.log "openvswitch  : " + JSON.stringify  ovsstatus
-console.log "=========================================================="
-
-#console.log process.env.npm_package_config_port
