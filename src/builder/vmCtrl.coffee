@@ -64,6 +64,9 @@ class VmData extends StormData
                         netmask:{type:"string","required":true}
                         gateway:{tye:"string","required":false}
                         type:{tye:"string","required":true}
+                        config : 
+                            type: "object"
+                            required: false
         
     constructor: (id, data) ->
         super id, data, Schema
@@ -215,9 +218,15 @@ class VmBuilder
                         "reason":vmdata.data.reason
 
     setLinkChars : (data,callback)->
-        netem.setLinkChars data,(result)=>
-            console.log "setLinkCahrs output " + result
-            callback result
+        vmdata = @registry.get data
+        return callback new Error "VM details not found in DB" unless vmdata?
+        for i in vmdata.data.ifmap            
+            util.log "Vmctrl - setLinkChars " + JSON.stringify i
+            if i.config?
+                netem.setLinkChars i.veth, i.config,(result)=>
+                    console.log "setLinkCahrs output " + result
+                callback true
+                        
 
     packettrace:(data, callback)->
         vmdata = @registry.get data

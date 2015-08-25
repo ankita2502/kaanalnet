@@ -309,13 +309,7 @@ class Topology
                     if obj?
                         obj.connect ifmap.veth , (res) =>
                             log.info "Link connect result" + JSON.stringify res
-                            #n.setLinkChars ifmap.veth, (res)=>
-                            #    log.info "Link setlinkchars result" + res
-            #once all the ifmaps are processed, callback it.
-            # TOdo : check whether async each to be used  for ifmap processing.
-            callback()    
-            
-
+            callback()             
         ,(err) =>
             if err
                 log.error "createNodeLinks error occured " + JSON.stringify err
@@ -340,6 +334,23 @@ class Topology
                 cb(false)
             else
                 log.info "createSwitchLinks  all are processed "
+                cb (true)
+
+
+
+    ConfigureLinkChars:(cb)->
+        #travel each node object and call setLinkChars
+        log.info "Topology - configuring the Link characteristics .. "        
+        async.each @nodeobj, (obj,callback) =>        
+            obj.setLinkChars (result)=>
+                log.info "Topology - setLinkChars result " + result
+            callback()
+        ,(err) =>
+            if err
+                log.error "ConfigureLinkChars error occured " + JSON.stringify err
+                cb(false)
+            else
+                log.info "ConfigureLinkChars  all are processed "
                 cb (true)
 
     buildSwitchObjects :()->
@@ -388,26 +399,9 @@ class Topology
                 if obj?                            
                     startaddress = temp.iparray[x++]                        
                     log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                    obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], null)
+                    obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], n.config)
                     log.info "Topology - #{obj.config.name} added the Lan interface" 
         
-            ###
-            log.info "Topology - iterating the connected switches in the the switch #{sw.name}" + JSON.stringify sw.connected_switches
-            if sw.connected_switches?
-                for n in  sw.connected_switches 
-                    obj = @getSwitchObjbyName(n.name)
-                    if obj?                            
-                        srctaplink = "#{sw.name}_#{n.name}"
-                        dsttaplink = "#{n.name}_#{sw.name}"                                                        
-                        #swobj.createTapInterfaces srctaplink,dsttaplink
-                        exec = require('child_process').exec
-                        command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
-                        exec command, (error, stdout, stderr) =>
-
-                        #console.log "createTapinterfaces completed", result
-                        obj.addTapInterface(dsttaplink) 
-                        swobj.addTapInterface(srctaplink) 
-            ###
     buildInterSwitchLink:(val)->
         log.info "Topology - building  a Interswitch link " +  JSON.stringify val
         for sw in val.switches
@@ -478,7 +472,7 @@ class Topology
         @buildSwitchObjects()
         @buildNodeObjects()
         @buildLinks()
-        
+      
      
     run :()->
         
@@ -519,6 +513,13 @@ class Topology
                     log.info "TOPOLOGY - START SWITCHES RESULT "  + res
                     callback(null,"START SWITCHES success") if res is true
                     callback new Error ('START SWITCHES failed')  unless res is true              
+            ,
+            (callback)=>
+                log.info "TOPOLOGY - CONFIGURING THE LINK characteristics "   
+                @ConfigureLinkChars (res)=>
+                    log.info "TOPOLOGY - CONFIG LINK CHARS RESULT "  + res
+                    callback(null,"CONFIG LINK CHAR success") if res is true
+                    callback new Error ('CONFIG LINK CHARS failed')  unless res is true              
             ],
             (err,result)=>
                 log.info "TOPOLOGY -  RUN result is  %s ", result

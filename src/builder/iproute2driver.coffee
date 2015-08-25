@@ -7,8 +7,7 @@ Schema =
     name: "netem"
     type: "object"
     required: true
-    properties:
-        ifname:  {"type":"string", "required":true}        
+    properties:        
         bandwidth:  {"type":"string", "required":true}
         latency:  {"type":"string", "required":false}
         jitter:  {"type":"string", "required":false}
@@ -17,9 +16,8 @@ Schema =
 
 class IPRoute2	
 
-    setDelayLoss = (data , callback)->  
-        #return callback false unless data instanceof netemData
-        ifname =  data.ifname
+    setDelayLoss : (ifname, data , callback)->  
+        #return callback false unless data instanceof netemData        
         latency = data.latency
         distribution = "normal"
         variation = data.jitter
@@ -35,11 +33,10 @@ class IPRoute2
             util.log "netstats: execute - stderr : " + stderr if stderr?
             callback(true)
 
-    setBandwidth = (data, callback)->
+    setBandwidth : (ifname, data, callback)->
         #bandwidth routine
         # tc qdisc add dev eth1 root handle 1: cbq avpkt 1000 bandwidth 10Mbit
-        #return callback false unless data instanceof netemData
-        ifname = data.ifname
+        #return callback false unless data instanceof netemData        
         avgpkt = "1000"
         bandwidth = data.bandwidth
         command = "tc qdisc add dev #{ifname} parent 1:1 handle 10: tbf rate  #{bandwidth} buffer 1600 limit 3000"
@@ -52,19 +49,20 @@ class IPRoute2
             callback(true)                
 
 
-    setLinkChars = (data, callback) ->
+    setLinkChars : (ifname,data, callback) ->
+        util.log "iproute2drive setlink chars input - #{ifname}  - " + JSON.stringify data
         chk = validate data, Schema
         console.log 'validate result ', chk
         unless chk.valid
             throw new Error "schema check failed"+  chk.valid
             return callback false
         callback true
-        util.log "setLinkChars data input " + JSON.stringify data
-        @setDelayLoss data , (result)=>
+        #util.log "setLinkChars data input " + JSON.stringify data
+        @setDelayLoss ifname, data , (result)=>
             util.log "setDelay result" + result
             #setLoss data.data, (result)=>
             #   util.log "setLoss result" + result
-            @setBandwidth data, (result)=>
+            @setBandwidth ifname, data, (result)=>
                 util.log "setBandwidth result " + result     
 
 module.exports = new IPRoute2

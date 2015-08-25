@@ -119,15 +119,11 @@ class node
             log.info "node running status result " +  res
             callback res  
 
-    setLinkChars : (ifname, callback)->
-        #vmctrl.setLinkChars 
-        for iface in @ifmap
-            if iface.veth is ifname
-                temp = extend {},iface.config
-                temp.ifname = ifname
-                log.info "setLinkChars " + JSON stringify temp
-                vmctrl.setLinkChars temp,(result)=>
-                    callback result
+    setLinkChars : (callback)->
+        log.info "setting the link characterstics " + @config.name
+        vmctrl.setLinkChars @uuid, (result) =>
+            log.info "setLinkChars result " +  result            
+            callback result
 
     get : () ->
         "id" : @uuid
