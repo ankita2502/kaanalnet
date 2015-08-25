@@ -36,7 +36,7 @@ class node
         @config.ifmap = @ifmap        
         @statistics = {}
         @status = {}
-        log.debug "inside node creation",  + JSON.stringify  @config
+        log.debug "node object created with  " + JSON.stringify @config
 
    
     addLanInterface :(brname, ipaddress, subnetmask, gateway, characterstics) ->         
@@ -118,6 +118,16 @@ class node
         vmctrl.status @params.id, (res) =>
             log.info "node running status result " +  res
             callback res  
+
+    setLinkChars : (ifname, callback)->
+        #vmctrl.setLinkChars 
+        for iface in @ifmap
+            if iface.veth is ifname
+                temp = extend {},iface.config
+                temp.ifname = ifname
+                log.info "setLinkChars " + JSON stringify temp
+                vmctrl.setLinkChars temp,(result)=>
+                    callback result
 
     get : () ->
         "id" : @uuid

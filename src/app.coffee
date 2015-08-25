@@ -20,8 +20,8 @@ if argv.h?
     return
 
 config =
-    logfile: argv.l ? "/var/log/vnetlabs.log"
-    loglevel: if argv.z in [ 'trace','debug','info','warn','error' ] then argv.z else 'info'
+    logfile: argv.l ? "/var/log/kaanalnet.log"
+    loglevel: if argv.z in [ 'trace','debug','info','warn','error' ] then argv.z else 'debug'
     controller: argv.C ? null
     switchtype: if argv.S in ['openvswitch','linuxbridge'] then argv.S else 'linuxbridge'
     virtualization : if argv.V in ['lxc','docker']  then argv.V else 'lxc'
@@ -34,7 +34,7 @@ config =
 
 #setting up the logger
 log = require('./utils/logger').createLogger(config.loglevel,config.logfile)
-log.info "VnetLab application starts..... "
+log.info "kaanalNet application starts..... "
 log.info "System Configuration " + JSON.stringify config
 console.log "System Configuration " + JSON.stringify config
 #log.debug, log.info, log.warn, log.notice,log.warning, log.critical, log.alert, log.emergency

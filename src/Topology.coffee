@@ -1,3 +1,4 @@
+assert = require 'assert'
 StormRegistry = require 'stormregistry'
 StormData = require 'stormdata'
 util = require('util')
@@ -118,6 +119,7 @@ class Topology
         @switchobj = []
         @nodeobj =  []
         @linksobj = []
+        log.info "New Topology object is created"
 
     systemconfig:(config) ->
         @sysconfig = extend {},config
@@ -125,6 +127,7 @@ class Topology
     # To be converted in to Hash model.
     getNodeObjbyName:(name) ->
         log.debug "getNodeObjbyName - input " + name
+        retun null unless name?
         for obj in @nodeobj
             log.debug "getNodeObjbyName - checking with " + obj.config.name
             if obj.config.name is name
@@ -134,12 +137,14 @@ class Topology
         return null
 
     getSwitchObjbyName:(name) ->
-        log.debug "inpjut for check " + name
+        log.debug "getSwitchObjbyName input  " + name
+        retun null unless name?
         for obj in @switchobj
-            log.debug "getSwitchObjbyName iteratkon " + obj.config.name
+            log.debug "getSwitchObjbyName iteraition from the objectarray " + obj.config.name
             if obj.config.name is name
                 log.debug "getSwitchObjbyName found " + obj.config.name
                 return obj
+        log.debug "getSwitchObjbyName not found " + name
         return null
 
     getSwitchObjbyUUID:(uuid) ->
@@ -161,7 +166,7 @@ class Topology
 
     createSwitches :(cb)->
         async.each @switchobj, (sw,callback) =>
-            log.info "create switch "
+            log.info "createing a  switch " + sw.config.name
             sw.create (result) =>   
                 #Todo:  Result value - Error Check to be done.
                 log.debug "create switch result " + JSON.stringify result
@@ -171,12 +176,12 @@ class Topology
                 log.error "Error occured on createswitches function " + JSON.stringify err
                 cb(false)
             else
-                log.info "createswitches completed "
+                log.info "create switches function completed "
                 cb (true)
 
     startSwitches :(cb)->
         async.each @switchobj, (sw,callback) =>
-            log.info "start switch "
+            log.info "starting a switch " + sw.config.name
             sw.start (result) =>   
                 #Todo : Result vaue to be checked.
                 log.info "start switch result " + JSON.stringify result
@@ -187,7 +192,7 @@ class Topology
                 log.error "error occured " + JSON.stringify err
                 cb(false)
             else
-                log.info "startswitches all are processed "
+                log.info "start switches all are processed "
                 cb (true)
 
     #create and start the nodes
@@ -202,7 +207,7 @@ class Topology
 
     createNodes :(cb)->    
         async.each @nodeobj, (n,callback) =>
-            log.info "createing a node "
+            log.info "createing a node " + n.config.name
             
             n.create (result) =>   
                 log.info "create node result " + JSON.stringify result
@@ -213,15 +218,15 @@ class Topology
                         return create
                     (repeat)->
                         n.getstatus (result)=>
-                            log.info "node creation #{n.uuid} status " + result.data.status
+                            log.info "node creation #{n.config.name} status " + result.data.status
                             unless result.data.status is "creation-in-progress"
                                 create = true
                                 n.start (result)=>                    
-                                    log.info "node start #{n.uuid} result " + JSON.stringify result
+                                    log.info "node start #{n.config.name} result " + JSON.stringify result
                                     return
                             setTimeout(repeat, 30000);
                     (err)->                        
-                        log.info "createNodes completed execution"
+                        log.info "createNodes completed"
                         callback(err)                        
                 )
         ,(err) =>
@@ -292,18 +297,23 @@ class Topology
         #get bridgename and vethname
         # call the api to add virtual interface to the switch
         async.each @nodeobj, (n,callback) =>
-            log.info "create a Link"
+            log.info "create a Link for a node " + n.config.name
             #travelling each interface
 
             for ifmap in n.config.ifmap
                 if ifmap.veth?
                     obj = @getSwitchObjbyName(ifmap.brname)
+                    if obj is null
+                        assert "switch object #{swn.name} is not present in switch object array...failed in createnodelinks function"    
                     if obj?
                         obj.connect ifmap.veth , (res) =>
                             log.info "Link connect result" + res
+                            #n.setLinkChars ifmap.veth, (res)=>
+                            #    log.info "Link setlinkchars result" + res
             #once all the ifmaps are processed, callback it.
             # TOdo : check whether async each to be used  for ifmap processing.
             callback()    
+            
 
         ,(err) =>
             if err
@@ -312,6 +322,7 @@ class Topology
             else
                 log.info "createNodeLinks  all are processed "
                 cb (true)
+
 
     #createSwitchLinks
     createSwitchLinks :(cb)->
@@ -330,58 +341,88 @@ class Topology
                 log.info "createSwitchLinks  all are processed "
                 cb (true)
 
-
-
     #Topology REST API functions
     create :(@tdata )->
         #util.log "Topology create - topodata: " + JSON.stringify @tdata                             
         @config = extend {}, @tdata        
         @uuid = @tdata.id
-        log.info "Topology - create - configdata " + JSON.stringify @config        
+        log.info "Topology - creation is started with data :  " + JSON.stringify @config        
         #ipmgr = new IPManager(WAN_SUBNET,LAN_SUBNET, MGMT_SUBNET)
+
         ipmgr = new IPManager(@sysconfig.wansubnet,@sysconfig.lansubnet,@sysconfig.mgmtsubnet)
+        log.info "Topology - created a IP Manager object.. "
+
+        log.info "processing the input switches array " + JSON.stringify @tdata.data.switches
         if @tdata.data.switches?            
+            log.info "Topology - creating the switches "
             for sw in @tdata.data.switches   
                 sw.make = @sysconfig.switchtype
-                sw.controller = @sysconfig.controller
+                sw.controller = @sysconfig.controller if @sysconfig.controller?
+                log.info "Topology - creating a new switch  " + JSON.stringify sw
                 obj = new switches(sw)
                 @switchobj.push obj
-
+                log.info "Topology - successfully created a switch < #{obj.config.name} > & pushed in to switchobj array "
+                           
+        log.info "processing the input nodes array " + JSON.stringify @tdata.data.nodes
         for val in @tdata.data.nodes
+            log.info "Topology - creating a new node " + JSON.stringify val
             obj = new node(val)
+            log.info "Topology - successfully created a new node object " + obj.config.name
             mgmtip = ipmgr.getFreeMgmtIP() 
+            log.info "Topology - Assigning the mgmtip #{mgmtip} to the node #{obj.config.name}"
             obj.addMgmtInterface mgmtip , '255.255.255.0'
+            log.info "Topology - Pushed the node obj  #{obj.config.name} in to the object array"    
             @nodeobj.push obj
         sindex = 1
+
+        log.info "processing the input data links array " + JSON.stringify @tdata.data.links
         for val in @tdata.data.links                                    
             x = 0
-            if val.type is "lan"
+            log.info "Topology - creating a link " +  JSON.stringify val
+
+            if val.type is "lan"                
                 temp = ipmgr.getFreeLanSubnet()  
+                log.info "Topology - Lan Free subnet is " + JSON.stringify temp
+
                 for sw in val.switches         
                     #switch object
-                    log.info "processing the switch ",sw.name
+                    log.info "Topology - iterating the switch present in the lan link " + sw.name
                     swobj = @getSwitchObjbyName(sw.name)
-
+                    if swobj is null
+                        assert "switch object #{sw.name} is not present in switch object array...something went wrong."
+                  
                     for n in  sw.connected_nodes
+                        log.info "Topology - iterating the connected_nodes in the switch #{sw.name} " + JSON.stringify n
                         obj = @getNodeObjbyName(n.name)
-                        if obj?
+                        if obj is null
+                            assert "node object #{n.name} is not present in node object array...something went wrong."
+                        if obj?                            
                             startaddress = temp.iparray[x++]                        
-                            obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], sw.config)
+                            log.info "Topology -  #{obj.config.name} Lan address " + startaddress
+                            obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], null)
+                            log.info "Topology - #{obj.config.name} added the Lan interface" 
+                    ###
                     if sw.connected_switches?
-                        for n in  sw.connected_switches 
-                            obj = @getSwitchObjbyName(n.name)
-                            if obj?                            
-                                srctaplink = "#{sw.name}_#{n.name}"
-                                dsttaplink = "#{n.name}_#{sw.name}"                                                        
+                        for swn in  sw.connected_switches
+                            log.info "Topology - iterating the connected_switches in the switch #{sw.name} " + JSON.stringify swn
+                            obj1 = @getSwitchObjbyName(swn.name)
+                            if obj1 is null
+                                assert "switch object #{swn.name} is not present in switch object array...something went wrong."    
+                        
+                            if obj1?                            
+                                log.info "Topology - Setting up the interswitch connection #{sw.name} #{swn.name} "
+                                srctaplink = "#{sw.name}_#{swn.name}"
+                                dsttaplink = "#{swn.name}_#{sw.name}"                                                        
                                 #swobj.createTapInterfaces srctaplink,dsttaplink
                                 exec = require('child_process').exec
                                 command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
+                                log.info "Topology executing command for tap device creation " + command
                                 exec command, (error, stdout, stderr) =>
 
                                 #console.log "createTapinterfaces completed", result
-                                obj.addTapInterface(dsttaplink) 
+                                obj1.addTapInterface(dsttaplink) 
                                 swobj.addTapInterface(srctaplink)  
-
+                    ###
             if val.type is "wan"
                 temp = ipmgr.getFreeWanSubnet()
                 #swname = "#{val.type}_#{val.connected_nodes[0].name}_#{val.connected_nodes[1].name}"
@@ -393,7 +434,7 @@ class Topology
                     ports: 2
                     type : val.type
                     make : @sysconfig.switchtype
-                    controller : @sysconfig.controller
+                    controller : @sysconfig.controller if @sysconfig.controller?
                 @switchobj.push obj
                 for n in  val.connected_nodes
                     console.log n.name
@@ -404,22 +445,30 @@ class Topology
                         obj.addWanInterface(swname, startaddress, temp.subnetMask, null, val.config)                        
 
         #Todo : Below functions (create) to be placed in asyn framework
+        log.info "TOPOLOGY--- GETTING IN TO ACTION "
+
+        log.info "TOPOLOGY ---- CREATING THE SWITCHES FROM THE SWITCH OBJECTS"
         @createSwitches (res)=>
-            log.info "createswitches result" + res   
-                     
+            log.info "TOPOLOGY ---- CREAT SWITCHES RESULT" + res   
+
+            log.info "TOPOLOGY - CREATING THE NODES FROM THE NODES OBJECTS"   
             @createNodes (res)=>
-                log.info "topologycreation status" + res
+                log.info "TOPOLOGY - CREATE NODES RESULT" + res
+
                 #Check the sttatus and do provision
+                log.info "TOPOLOGY - CREATING THE NODE LINKS - ATTACHING WITH SWITCHES"   
                 @createNodeLinks (res)=>
-                    log.info "create Nodelinks result " + res
+                    log.info "TOPOLOGY - CREATE NODE LINKS RESULT " + res
 
+                    log.info "TOPOLOGY - CREATING THE SWITCH LINKS "   
                     @createSwitchLinks (res)=>
-                        log.info "create Switchlinks result " + res
+                        log.info "TOPOLOGY - CREATE SWITCH LINKS RESULT  " + res
 
+                        log.info "TOPOLOGY - STARTING THE SWITCHES "   
                         @startSwitches (res)=>
-                            log.info "start switches result "  + res
+                            log.info "TOPOLOGY - START SWITCHES RESULT "  + res
 
-                            log.info "Topology creation completed"
+                            log.info "***Topology creation completed****"
         
                         #provision
                         #@provisionNodes (res)=>
@@ -452,9 +501,9 @@ class Topology
 
 
 class TopologyMaster
-    constructor :(filename) ->
-        @registry = new TopologyRegistry filename if filename?
-        @registry = new TopologyRegistry unless filename?
+    constructor :() ->
+        #@registry = new TopologyRegistry filename if filename?
+        @registry = new TopologyRegistry
         @topologyObj = {}
         @sysconfig = {}
         log.info "TopologyMaster - constructor - TopologyMaster object is created"  
@@ -477,8 +526,8 @@ class TopologyMaster
             #log.info "TopologyMaster - create - topologyData " + JSON.stringify topodata 
 
         #finally create a project                    
-        log.info "TopologyMaster - create - creating a new Topology with " + JSON.stringify topodata
-        obj = new Topology
+        log.info "TopologyMaster - Topology Input JSON  schema check is passed " + JSON.stringify topodata
+        obj = new Topology        
         obj.systemconfig @sysconfig
         obj.create topodata              
         @topologyObj[obj.uuid] = obj

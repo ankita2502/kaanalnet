@@ -2,7 +2,7 @@ StormData = require('stormdata')
 StormRegistry = require('stormregistry')
 vm = require('./lxcdriver')
 util = require('util')
-
+netem = require('./iproute2driver')
 #===============================================================================================#
 
 class VmRegistry extends StormRegistry
@@ -213,6 +213,11 @@ class VmBuilder
                         "id":vmdata.id
                         "status":VmDataa.data.status
                         "reason":vmdata.data.reason
+
+    setLinkChars : (data,callback)->
+        netem.setLinkChars data,(result)=>
+            console.log "setLinkCahrs output " + result
+            callback result
 
     packettrace:(data, callback)->
         vmdata = @registry.get data
