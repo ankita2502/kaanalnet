@@ -369,6 +369,7 @@ class Topology
 
 
     buildLanLink: (val)->
+        x = 0
         log.info "Topology - building  a LAN link " +  JSON.stringify val
         temp = @ipmgr.getFreeLanSubnet()  
         log.info "Topology - Lan Free subnet is " + JSON.stringify temp
@@ -432,6 +433,7 @@ class Topology
                         swobj.addTapInterface(srctaplink)                 
 
     buildWanLink:(val)->
+        x = 0
         log.info "Topology - building  a WAN link " +  JSON.stringify val
         temp = @ipmgr.getFreeWanSubnet()
         #swname = "#{val.type}_#{val.connected_nodes[0].name}_#{val.connected_nodes[1].name}"
@@ -457,7 +459,7 @@ class Topology
         log.info "processing the input data links array to build links " + JSON.stringify @config.links
         for val in @config.links                                                
             log.info "Topology - creating a link " +  JSON.stringify val
-            if val.type is "lan"                                
+            if val.type is "lan"                                             
                 @buildLanLink(val)
                 @buildInterSwitchLink(val)
             if val.type is "wan"
