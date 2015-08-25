@@ -38,15 +38,15 @@ class switches
         "config":@config
         "status":@status
         "statistics":@statistics
-    stop:()->
-        log.info "Switches -   stoping a switch ", + JSON.stringify config
+    stop:(callback)->
+        log.info "Switches -   stoping a switch " + JSON.stringify config
         switchctrl.stop @uuid, (res) =>
             log.info "Switches - switch stop result " + JSON.stringify res
             #console.log res
             callback res                  
 
-    start:()->
-        log.info "Switches -  starting a switch ", + JSON.stringify  @config
+    start:(callback)->
+        log.info "Switches -  starting a switch " + JSON.stringify  @config
         switchctrl.start @uuid, (res) =>
             log.info "Switches -   switch start result " + JSON.stringify res
             #console.log res
@@ -67,21 +67,21 @@ class switches
         log.info "Switches - createTapInterfaces - result " + JSON.stringify result
         return result
     
-    addTapInterface:(ifname,characteristics)->
-        tapif =
-            "name": ifname 
-            "config": characteristics 
-        @tapifs.push tapif
-        #@tapifs.push ifname if ifname?
-        log.info "Switches - addTapInterface - ifname " + ifname
-        @config = extend {}, characteristics
+    addTapInterface:(ifname)->
+        #tapif =
+        #    "name": ifname 
+        #    "config": characteristics 
+        #@tapifs.push tapif
+        @tapifs.push ifname if ifname?
+        #log.info "Switches - addTapInterface - ifname " + ifname
+        #@config = extend {}, characteristics
         return
 
     connectTapInterfaces:(callback)->
         log.info "Switches - connectTapInterfaces ...connecting the inter switch links"
         for tapif in @tapifs
             #Async model to be introduced
-            @connect tapif.name,(result)=>                
+            @connect tapif,(result)=>                
                 callback result
         callback
 

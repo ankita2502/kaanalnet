@@ -88,17 +88,17 @@ class node
             @config.id = @uuid
             @status.result = result.status
             @status.result = result.reason if result.reason?
-            log.info "node creation result " + result
+            log.info "node creation result " + JSON.stringify result
             callback result
     start : (callback)->
         log.info "starting a node "  +  @config.name
         vmctrl.start @uuid, (result) =>
-            log.info "node start result " + result
+            log.info "node start result " + JSON.stringify result
             callback result
     stop : (callback)->
         log.info "stopping a node " + @config.name
         vmctrl.stop @uuid, (result) =>
-            log.info "node stop result " + result            
+            log.info "node stop result " + JSON.stringify result            
             callback result
     trace : (callback)->
         vmctrl.packettrace @uuid, (res) =>
@@ -107,12 +107,12 @@ class node
     del : (callback)->
         log.info "node deleting  " + @config.name
         vmctrl.del @uuid, (res) =>
-            log.info "node del result " , res            
+            log.info "node del result " + JSON.stringify res            
             callback res    
     getstatus : (callback)->
         log.info "getstatus called" + @uuid
         vmctrl.get @uuid, (result) =>
-            log.info "node getstatus result " + result
+            log.info "node getstatus result " + JSON.stringify result
             callback result
     getrunningstatus : (callback)->
         vmctrl.status @params.id, (res) =>

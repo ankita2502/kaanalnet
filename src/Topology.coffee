@@ -17,7 +17,8 @@ switches = require('./Switches')
 #Log handler
 log = require('./utils/logger').getLogger()
 log.info "Topology Logger test message"
-
+x = 0
+sindex = 1
 
 ## Global IP Manager for  -- To be relooked the design
 #MGMT_SUBNET = "10.0.3.0"
@@ -307,7 +308,7 @@ class Topology
                         assert "switch object #{swn.name} is not present in switch object array...failed in createnodelinks function"    
                     if obj?
                         obj.connect ifmap.veth , (res) =>
-                            log.info "Link connect result" + res
+                            log.info "Link connect result" + JSON.stringify res
                             #n.setLinkChars ifmap.veth, (res)=>
                             #    log.info "Link setlinkchars result" + res
             #once all the ifmaps are processed, callback it.
@@ -341,140 +342,185 @@ class Topology
                 log.info "createSwitchLinks  all are processed "
                 cb (true)
 
-    #Topology REST API functions
-    create :(@tdata )->
-        #util.log "Topology create - topodata: " + JSON.stringify @tdata                             
-        @config = extend {}, @tdata        
-        @uuid = @tdata.id
-        log.info "Topology - creation is started with data :  " + JSON.stringify @config        
-        #ipmgr = new IPManager(WAN_SUBNET,LAN_SUBNET, MGMT_SUBNET)
-
-        ipmgr = new IPManager(@sysconfig.wansubnet,@sysconfig.lansubnet,@sysconfig.mgmtsubnet)
-        log.info "Topology - created a IP Manager object.. "
-
-        log.info "processing the input switches array " + JSON.stringify @tdata.data.switches
-        if @tdata.data.switches?            
+    buildSwitchObjects :()->
+        log.info "processing the input switches array " + JSON.stringify @config.switches
+        if @config.switches?            
             log.info "Topology - creating the switches "
-            for sw in @tdata.data.switches   
+            for sw in @config.switches   
                 sw.make = @sysconfig.switchtype
                 sw.controller = @sysconfig.controller if @sysconfig.controller?
                 log.info "Topology - creating a new switch  " + JSON.stringify sw
                 obj = new switches(sw)
                 @switchobj.push obj
                 log.info "Topology - successfully created a switch < #{obj.config.name} > & pushed in to switchobj array "
-                           
-        log.info "processing the input nodes array " + JSON.stringify @tdata.data.nodes
-        for val in @tdata.data.nodes
+
+
+    buildNodeObjects :()->
+        log.info "processing the input nodes array " + JSON.stringify @config.nodes
+        for val in @config.nodes
             log.info "Topology - creating a new node " + JSON.stringify val
             obj = new node(val)
             log.info "Topology - successfully created a new node object " + obj.config.name
-            mgmtip = ipmgr.getFreeMgmtIP() 
+            mgmtip = @ipmgr.getFreeMgmtIP() 
             log.info "Topology - Assigning the mgmtip #{mgmtip} to the node #{obj.config.name}"
             obj.addMgmtInterface mgmtip , '255.255.255.0'
             log.info "Topology - Pushed the node obj  #{obj.config.name} in to the object array"    
-            @nodeobj.push obj
-        sindex = 1
+            @nodeobj.push obj        
 
-        log.info "processing the input data links array " + JSON.stringify @tdata.data.links
-        for val in @tdata.data.links                                    
-            x = 0
-            log.info "Topology - creating a link " +  JSON.stringify val
 
-            if val.type is "lan"                
-                temp = ipmgr.getFreeLanSubnet()  
-                log.info "Topology - Lan Free subnet is " + JSON.stringify temp
-
-                for sw in val.switches         
-                    #switch object
-                    log.info "Topology - iterating the switch present in the lan link " + sw.name
-                    swobj = @getSwitchObjbyName(sw.name)
-                    if swobj is null
-                        assert "switch object #{sw.name} is not present in switch object array...something went wrong."
+    buildLanLink: (val)->
+        log.info "Topology - building  a LAN link " +  JSON.stringify val
+        temp = @ipmgr.getFreeLanSubnet()  
+        log.info "Topology - Lan Free subnet is " + JSON.stringify temp
+        for sw in val.switches         
+            #switch object
+            log.info "Topology - iterating the switch present in the lan link " + sw.name
+            swobj = @getSwitchObjbyName(sw.name)
+            if swobj is null
+                assert "switch object #{sw.name} is not present in switch object array...something went wrong."
                   
-                    for n in  sw.connected_nodes
-                        log.info "Topology - iterating the connected_nodes in the switch #{sw.name} " + JSON.stringify n
-                        obj = @getNodeObjbyName(n.name)
-                        if obj is null
-                            assert "node object #{n.name} is not present in node object array...something went wrong."
-                        if obj?                            
-                            startaddress = temp.iparray[x++]                        
-                            log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                            obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], null)
-                            log.info "Topology - #{obj.config.name} added the Lan interface" 
-                    ###
-                    if sw.connected_switches?
-                        for swn in  sw.connected_switches
-                            log.info "Topology - iterating the connected_switches in the switch #{sw.name} " + JSON.stringify swn
-                            obj1 = @getSwitchObjbyName(swn.name)
-                            if obj1 is null
-                                assert "switch object #{swn.name} is not present in switch object array...something went wrong."    
-                        
-                            if obj1?                            
-                                log.info "Topology - Setting up the interswitch connection #{sw.name} #{swn.name} "
-                                srctaplink = "#{sw.name}_#{swn.name}"
-                                dsttaplink = "#{swn.name}_#{sw.name}"                                                        
-                                #swobj.createTapInterfaces srctaplink,dsttaplink
-                                exec = require('child_process').exec
-                                command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
-                                log.info "Topology executing command for tap device creation " + command
-                                exec command, (error, stdout, stderr) =>
+            for n in  sw.connected_nodes
+                log.info "Topology - iterating the connected_nodes in the switch #{sw.name} " + JSON.stringify n
+                obj = @getNodeObjbyName(n.name)
+                if obj is null
+                    assert "node object #{n.name} is not present in node object array...something went wrong."
+                if obj?                            
+                    startaddress = temp.iparray[x++]                        
+                    log.info "Topology -  #{obj.config.name} Lan address " + startaddress
+                    obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], null)
+                    log.info "Topology - #{obj.config.name} added the Lan interface" 
+        
+            ###
+            log.info "Topology - iterating the connected switches in the the switch #{sw.name}" + JSON.stringify sw.connected_switches
+            if sw.connected_switches?
+                for n in  sw.connected_switches 
+                    obj = @getSwitchObjbyName(n.name)
+                    if obj?                            
+                        srctaplink = "#{sw.name}_#{n.name}"
+                        dsttaplink = "#{n.name}_#{sw.name}"                                                        
+                        #swobj.createTapInterfaces srctaplink,dsttaplink
+                        exec = require('child_process').exec
+                        command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
+                        exec command, (error, stdout, stderr) =>
 
-                                #console.log "createTapinterfaces completed", result
-                                obj1.addTapInterface(dsttaplink) 
-                                swobj.addTapInterface(srctaplink)  
-                    ###
+                        #console.log "createTapinterfaces completed", result
+                        obj.addTapInterface(dsttaplink) 
+                        swobj.addTapInterface(srctaplink) 
+            ###
+    buildInterSwitchLink:(val)->
+        log.info "Topology - building  a Interswitch link " +  JSON.stringify val
+        for sw in val.switches
+            #switch object
+            log.info "Topology - iterating the switch present in link for interconnecting the switches " + sw.name
+            swobj = @getSwitchObjbyName(sw.name)
+            if swobj is null
+                assert "switch object #{sw.name} is not present in switch object array...something went wrong."
+            
+            if sw.connected_switches?
+                for n in  sw.connected_switches 
+                    obj = @getSwitchObjbyName(n.name)
+                    if obj?                            
+                        srctaplink = "#{sw.name}_#{n.name}"
+                        dsttaplink = "#{n.name}_#{sw.name}"                                                        
+                        #swobj.createTapInterfaces srctaplink,dsttaplink
+                        exec = require('child_process').exec
+                        command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
+                        exec command, (error, stdout, stderr) =>
+
+                        #console.log "createTapinterfaces completed", result
+                        obj.addTapInterface(dsttaplink) 
+                        swobj.addTapInterface(srctaplink)                 
+
+    buildWanLink:(val)->
+        log.info "Topology - building  a WAN link " +  JSON.stringify val
+        temp = @ipmgr.getFreeWanSubnet()
+        #swname = "#{val.type}_#{val.connected_nodes[0].name}_#{val.connected_nodes[1].name}"
+        swname = "#{val.type}_sw#{sindex}"
+        sindex++
+        log.debug "  wan swname is "+ swname
+        obj = new switches
+            name : swname
+            ports: 2
+            type : val.type
+            make : @sysconfig.switchtype
+            controller : @sysconfig.controller if @sysconfig.controller?
+        @switchobj.push obj
+        
+        for n in  val.connected_nodes
+            log.info "updating wan interface for ", n.name
+            obj = @getNodeObjbyName(n.name)
+            if obj?
+                startaddress = temp.iparray[x++]
+                obj.addWanInterface(swname, startaddress, temp.subnetMask, null, val.config)
+
+    buildLinks:()->       
+        log.info "processing the input data links array to build links " + JSON.stringify @config.links
+        for val in @config.links                                                
+            log.info "Topology - creating a link " +  JSON.stringify val
+            if val.type is "lan"                                
+                @buildLanLink(val)
+                @buildInterSwitchLink(val)
             if val.type is "wan"
-                temp = ipmgr.getFreeWanSubnet()
-                #swname = "#{val.type}_#{val.connected_nodes[0].name}_#{val.connected_nodes[1].name}"
-                swname = "#{val.type}_sw#{sindex}"
-                sindex++
-                log.debug "  wan swname is "+ swname
-                obj = new switches
-                    name : swname
-                    ports: 2
-                    type : val.type
-                    make : @sysconfig.switchtype
-                    controller : @sysconfig.controller if @sysconfig.controller?
-                @switchobj.push obj
-                for n in  val.connected_nodes
-                    console.log n.name
-                    log.info "updating wan interface for ", n.name
-                    obj = @getNodeObjbyName(n.name)
-                    if obj?
-                        startaddress = temp.iparray[x++]
-                        obj.addWanInterface(swname, startaddress, temp.subnetMask, null, val.config)                        
+                @buildWanLink(val)
 
-        #Todo : Below functions (create) to be placed in asyn framework
-        log.info "TOPOLOGY--- GETTING IN TO ACTION "
+    #Topology REST API functions
+    create :(@tdata)->
+        #util.log "Topology create - topodata: " + JSON.stringify @tdata                             
+        @config = extend {}, @tdata.data      
+        @uuid = @tdata.id
+        log.info "Topology - creation is started with data :  " + JSON.stringify @config        
 
-        log.info "TOPOLOGY ---- CREATING THE SWITCHES FROM THE SWITCH OBJECTS"
-        @createSwitches (res)=>
-            log.info "TOPOLOGY ---- CREAT SWITCHES RESULT" + res   
+        @ipmgr = new IPManager(@sysconfig.wansubnet,@sysconfig.lansubnet,@sysconfig.mgmtsubnet)
+        log.info "Topology - created a IP Manager object.. "
 
-            log.info "TOPOLOGY - CREATING THE NODES FROM THE NODES OBJECTS"   
-            @createNodes (res)=>
-                log.info "TOPOLOGY - CREATE NODES RESULT" + res
+        @buildSwitchObjects()
+        @buildNodeObjects()
+        @buildLinks()
+        
+     
+    run :()->
+        
+        log.info "TOPOLOGY--- GETTING IN TO ACTION... Executing the Topology "
 
-                #Check the sttatus and do provision
+        async.series([
+            (callback)=>
+                log.info "TOPOLOGY ---- CREATING THE SWITCHES FROM THE SWITCH OBJECTS"
+                @createSwitches (res)->
+                    log.info "TOPOLOGY ---- CREAET SWITCHES RESULT" + res   
+                    callback(null,"CREATESWITCHES success") if res is true
+                    callback new Error ('CREATESWITCHES failed')  unless res is true
+            ,
+            (callback)=>
+                log.info "TOPOLOGY - CREATING THE NODES FROM THE NODES OBJECTS"   
+                @createNodes (res)=>
+                    log.info "TOPOLOGY - CREATE NODES RESULT" + res
+                    callback(null,"CREATENODES success") if res is true
+                    callback new Error ('CREATENODES failed')  unless res is true
+            ,
+            (callback)=>
                 log.info "TOPOLOGY - CREATING THE NODE LINKS - ATTACHING WITH SWITCHES"   
                 @createNodeLinks (res)=>
                     log.info "TOPOLOGY - CREATE NODE LINKS RESULT " + res
-
-                    log.info "TOPOLOGY - CREATING THE SWITCH LINKS "   
-                    @createSwitchLinks (res)=>
-                        log.info "TOPOLOGY - CREATE SWITCH LINKS RESULT  " + res
-
-                        log.info "TOPOLOGY - STARTING THE SWITCHES "   
-                        @startSwitches (res)=>
-                            log.info "TOPOLOGY - START SWITCHES RESULT "  + res
-
-                            log.info "***Topology creation completed****"
-        
-                        #provision
-                        #@provisionNodes (res)=>
-                        #    util.log "provision" + res
-
-
+                    callback(null,"CREATE NODE LINKS success") if res is true
+                    callback new Error ('CREATE NODE LINKS failed')  unless res is true                    
+            ,
+            (callback)=>
+                log.info "TOPOLOGY - CREATING THE SWITCH LINKS "   
+                @createSwitchLinks (res)=>
+                    log.info "TOPOLOGY - CREATE SWITCH LINKS RESULT  " + res
+                    callback(null,"CREATE SWITCH LINKS success") if res is true
+                    callback new Error ('CREATE SWITCH LINKS failed')  unless res is true                                        
+            ,
+            (callback)=>
+                log.info "TOPOLOGY - STARTING THE SWITCHES "   
+                @startSwitches (res)=>
+                    log.info "TOPOLOGY - START SWITCHES RESULT "  + res
+                    callback(null,"START SWITCHES success") if res is true
+                    callback new Error ('START SWITCHES failed')  unless res is true              
+            ],
+            (err,result)=>
+                log.info "TOPOLOGY -  RUN result is  %s ", result
+        )
 
     del :()->
         res = @destroyNodes() 
@@ -531,6 +577,7 @@ class TopologyMaster
         obj.systemconfig @sysconfig
         obj.create topodata              
         @topologyObj[obj.uuid] = obj
+        obj.run()
         return callback @registry.add topodata                
    
     del : (id, callback) ->
@@ -646,5 +693,4 @@ class TopologyMaster
 
 
 #============================================================================================================
-#module.exports =  new TopologyMaster '/tmp/topology.db'
 module.exports =  new TopologyMaster
