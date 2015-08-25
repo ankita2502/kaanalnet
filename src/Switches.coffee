@@ -67,12 +67,14 @@ class switches
         log.info "Switches - createTapInterfaces - result " + JSON.stringify result
         return result
     
-    addTapInterface:(ifname)->
-        #tapif =
-        #    "name": ifname 
-        #    "config": characteristics 
-        #@tapifs.push tapif
-        @tapifs.push ifname if ifname?
+    addTapInterface:(ifname,characteristics)->
+        #@tapifs.push ifname if ifname?
+        tapif =
+            "name": ifname 
+            "config": characteristics 
+        log.info "addTapInterface   " + JSON.stringify tapif
+        @tapifs.push tapif
+        #@tapifs.push ifname if ifname?
         #log.info "Switches - addTapInterface - ifname " + ifname
         #@config = extend {}, characteristics
         return
@@ -81,9 +83,18 @@ class switches
         log.info "Switches - connectTapInterfaces ...connecting the inter switch links"
         for tapif in @tapifs
             #Async model to be introduced
-            @connect tapif,(result)=>                
+            log.info "connectTapInterfaces   " + JSON.stringify tapif
+            @connect tapif.name,(result)=>                
                 callback result
         callback
+
+    setLinkChars : (callback)->
+        log.info "Switches: setting the link characterstics " + @config.name
+        for tapif in @tapifs
+            log.info "Switchs setLinkChars " + JSON.stringify tapif
+            switchctrl.setLinkChars @uuid, tapif,(result) =>
+                log.info "Switches: setLinkChars result " +  result            
+                callback result
 
 
     switchStatus:()->   

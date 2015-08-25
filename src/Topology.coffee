@@ -340,10 +340,10 @@ class Topology
 
     ConfigureLinkChars:(cb)->
         #travel each node object and call setLinkChars
-        log.info "Topology - configuring the Link characteristics .. "        
+        log.info "Topology - configuring the Node to Switch Link characteristics .. "        
         async.each @nodeobj, (obj,callback) =>        
             obj.setLinkChars (result)=>
-                log.info "Topology - setLinkChars result " + result
+                log.info "Topology - node setLinkChars result " + result
             callback()
         ,(err) =>
             if err
@@ -352,6 +352,22 @@ class Topology
             else
                 log.info "ConfigureLinkChars  all are processed "
                 cb (true)
+
+    ConfigureInterSwitchLinkChars:(cb)->
+        #travel each switch object and call setLinkChars
+        log.info "Topology - configuring the InterSwitch Link characteristics .. "        
+        async.each @switchobj, (obj,callback) =>        
+            obj.setLinkChars (result)=>
+                log.info "Topology - Switch setLinkChars result " + result
+            callback()
+        ,(err) =>
+            if err
+                log.error "ConfigureLinkChars error occured " + JSON.stringify err
+                cb(false)
+            else
+                log.info "ConfigureLinkChars  all are processed "
+                cb (true)
+
 
     buildSwitchObjects :()->
         log.info "processing the input switches array " + JSON.stringify @config.switches
@@ -423,8 +439,9 @@ class Topology
                         exec command, (error, stdout, stderr) =>
 
                         #console.log "createTapinterfaces completed", result
-                        obj.addTapInterface(dsttaplink) 
-                        swobj.addTapInterface(srctaplink)                 
+                        swobj.addTapInterface(srctaplink,n.config)
+                        obj.addTapInterface(dsttaplink,null)
+                        
 
     buildWanLink:(val)->
         x = 0
@@ -447,7 +464,7 @@ class Topology
             obj = @getNodeObjbyName(n.name)
             if obj?
                 startaddress = temp.iparray[x++]
-                obj.addWanInterface(swname, startaddress, temp.subnetMask, null, val.config)
+                obj.addWanInterface(swname, startaddress, temp.subnetMask, null, n.config)
 
     buildLinks:()->       
         log.info "processing the input data links array to build links " + JSON.stringify @config.links
@@ -515,11 +532,19 @@ class Topology
                     callback new Error ('START SWITCHES failed')  unless res is true              
             ,
             (callback)=>
-                log.info "TOPOLOGY - CONFIGURING THE LINK characteristics "   
+                log.info "TOPOLOGY - CONFIGURING THE NODE LINK characteristics "   
                 @ConfigureLinkChars (res)=>
-                    log.info "TOPOLOGY - CONFIG LINK CHARS RESULT "  + res
-                    callback(null,"CONFIG LINK CHAR success") if res is true
-                    callback new Error ('CONFIG LINK CHARS failed')  unless res is true              
+                    log.info "TOPOLOGY - CONFIG LINK NODE CHARS RESULT "  + res
+                    callback(null,"CONFIG NODE LINK CHAR success") if res is true
+                    callback new Error ('CONFIG NODE LINK CHARS failed')  unless res is true              
+            ,
+            #ConfigureInterSwitchLinkChars
+            (callback)=>
+                log.info "TOPOLOGY - CONFIGURING THE INTER SWITCH  LINK characteristics "   
+                @ConfigureInterSwitchLinkChars (res)=>
+                    log.info "TOPOLOGY - CONFIG INTER SWITCH LINK  CHARS RESULT "  + res
+                    callback(null,"CONFIG INTERSWITCH LINK CHAR success") if res is true
+                    callback new Error ('CONFIG INTERSWITCH  LINK CHARS failed')  unless res is true              
             ],
             (err,result)=>
                 log.info "TOPOLOGY -  RUN result is  %s ", result

@@ -1,6 +1,7 @@
 brctl = require('./brctldriver')
 ovs= require('./ovsdriver')
 util = require('util')
+netem = require('./iproute2driver')
 StormData = require('stormdata')
 StormRegistry = require('stormregistry')
 #===============================================================================================#
@@ -201,11 +202,22 @@ class SwitchBuilder
 		else
 			bridge  = brctl
 		bridge.getStatus sdata.data.name, (result) =>
-			util.log "getStatus" + result
+			util.log "SwitchCtrl getStatus" + result
 			sdata.data.status = result
 			@registry.update sdata
 			return callback sdata
 			#delete the switch from db
 
+	setLinkChars: (data, chars, callback)->
+		sdata = @registry.get data
+		if sdata.data.make is "openvswitch"
+			bridge  = ovs
+		else
+			bridge  = brctl
+		return callback new Error "Switch details not found in DB" unless sdata?
+		return callback true unless chars.config?
+		netem.setLinkChars chars.name, chars.config,(result)=>
+			console.log "SwitchCtrl - setLinkCahrs output " + result
+			callback true
 
 module.exports = new SwitchBuilder
