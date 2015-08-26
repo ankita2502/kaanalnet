@@ -44,9 +44,10 @@ class VmData extends StormData
         type: "object"
         required: true
         properties:
-            name : {"type":"string", "required":true}        
-            projectid   : {"type":"string", "required":false}
+            name : {"type":"string", "required":true}                    
             type : {"type":"string", "required":false}
+            virtulization : {"type":"string", "required":false}
+            image : {"type":"string", "required":false}
             memory : {"type":"string", "required":false}   
             vcpus : {"type":"string", "required":false}		
             ifmap:
@@ -106,7 +107,7 @@ class VmBuilder
                 vm.destroyContainer vmdata.data.name, (result) =>
                     #Need to check the result
 
-                    vm.createContainer vmdata.data.name, "device", (result) =>
+                    vm.createContainer vmdata.data.name, vmdata.data.image, (result) =>
                         util.log "createvm " + result
                         if result is false
                             vmdata.data.status = "failure"

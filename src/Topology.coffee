@@ -385,7 +385,11 @@ class Topology
     buildNodeObjects :()->
         log.info "processing the input nodes array " + JSON.stringify @config.nodes
         for val in @config.nodes
+            #appending virtualization type and reference image name in the node json
+            val.virtualization = @sysconfig.virtualization
+            val.image = @sysconfig.lxcimage
             log.info "Topology - creating a new node " + JSON.stringify val
+
             obj = new node(val)
             log.info "Topology - successfully created a new node object " + obj.config.name
             mgmtip = @ipmgr.getFreeMgmtIP() 

@@ -135,7 +135,7 @@ class SwitchBuilder
 			bridge  = ovs
 			if sdata.data.controller?
 				bridge.setController sdata.data.name, sdata.data.controller, (result) =>
-					util.log.log result
+					util.log result
 		else
 			bridge  = brctl
 

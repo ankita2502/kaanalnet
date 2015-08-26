@@ -24,7 +24,7 @@ config =
     loglevel: if argv.z in [ 'trace','debug','info','warn','error' ] then argv.z else 'debug'
     controller: argv.C ? null
     switchtype: if argv.S in ['openvswitch','linuxbridge'] then argv.S else 'linuxbridge'
-    virtualization : if argv.V in ['lxc','docker']  then argv.V else 'lxc'
+    virtualization : 'lxc' #if argv.V in ['lxc','docker']  then argv.V else 'lxc'
     wansubnet : argv.W  ? '172.27.1.0'
     lansubnet : argv.L  ? '10.10.10.0'
     mgmtsubnet : argv.M ? '10.0.3.0'
