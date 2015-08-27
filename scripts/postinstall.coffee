@@ -7,6 +7,7 @@ config = require('../package.json').config
 
 packagestatus = []
 
+templatepath = "./../scripts/lxc-ubuntu"
 
 dpkgquery = (pkg,callback) ->
 	return callback false unless pkg?
@@ -75,7 +76,8 @@ InstallPackages = (cb)->
 
 InstallLXCBaseContainer = (cb)->
 	#lxc-create -t ubuntu -n node -- -r trusty
-	command = "lxc-create -t ubuntu -n node -- -r trusty"
+	#command = "lxc-create -t ubuntu -n nodeimg -- -r trusty"
+	command = "lxc-create -t #{templatepath} -n nodeimg -- -r trusty"	
 	util.log "executing #{command}..."        
 	exec command, (error, stdout, stderr) =>
 		util.log "installing LXC Base container - Error : " + error

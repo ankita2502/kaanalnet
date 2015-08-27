@@ -14,7 +14,7 @@ if argv.h?
         -W wan subnet (default - 172.17.1.0)
         -L Lan subnet (default - 10.10.10.0)
         -M Mgmt subnet (default - 10.0.3.0)
-        -I Lxc image name (default: "node")  
+        -I Lxc image name (default: "nodeimg")  
     """
     return
 
@@ -27,7 +27,7 @@ config =
     wansubnet : argv.W  ? '172.27.1.0'
     lansubnet : argv.L  ? '10.10.10.0'
     mgmtsubnet : argv.M ? '10.0.3.0'
-    lxcimage : argv.I ? 'device'
+    lxcimage : argv.I ? 'nodeimg'
 
 #console.log config
 
