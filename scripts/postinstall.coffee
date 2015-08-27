@@ -82,9 +82,9 @@ InstallLXCBaseContainer = (cb)->
 		util.log "Installing LXC Base container - stdout : " + stdout
 		util.log "Installing LXC Base container - stderr : " + stderr		
 		if error?			
-			callback false
+			cb false
 		else			
-			callback true
+			cb true
 
 
 

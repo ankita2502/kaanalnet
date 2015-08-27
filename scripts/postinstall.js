@@ -113,9 +113,9 @@
         util.log("Installing LXC Base container - stdout : " + stdout);
         util.log("Installing LXC Base container - stderr : " + stderr);
         if (error != null) {
-          return callback(false);
+          return cb(false);
         } else {
-          return callback(true);
+          return cb(true);
         }
       };
     })(this));
