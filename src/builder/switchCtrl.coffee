@@ -184,6 +184,7 @@ class SwitchBuilder
 		else
 			bridge  = brctl
 		return callback new Error "Switch details not found in DB" unless sdata?
+		
 		bridge.deleteBridge sdata.data.name, (result) =>
 			util.log "deletBridge" + result
 			return callback new Error "Failed to Delete the Switch" if result is false
@@ -192,6 +193,10 @@ class SwitchBuilder
 			return callback 
 				"id":sdata.id
 				"status": "deleted"
+
+	dellink: (ifname,callback)->
+		netem.delLink ifname,(result)->
+			callback result
 
 	status: (data, callback) ->
 		#Todo

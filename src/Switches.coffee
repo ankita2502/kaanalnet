@@ -27,7 +27,8 @@ class switches
             callback res
 
     del: (callback)->
-        log.info "Switches - deleting a switch " + JSON.stringify  @config
+        log.info "Switches - deleting a switch " + JSON.stringify  @config        
+        @delLinks()
         switchctrl.del @uuid, (res) =>
             #console.log res
             log.info "Switches -  switch  deletion result " + res
@@ -96,6 +97,11 @@ class switches
                 log.info "Switches: setLinkChars result " +  result            
                 callback result
 
+    delLinks : ()->
+        for tapif in @tapifs
+            log.info "deleting the link " + JSON.stringify tapif
+            switchctrl.dellink tapif.name,(result) =>
+                log.info "Switches: del link result " +  result                            
 
     switchStatus:()->   
         #Todo be done    

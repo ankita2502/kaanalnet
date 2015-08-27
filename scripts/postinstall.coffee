@@ -24,12 +24,12 @@ dpkgquery = (pkg,callback) ->
 #aptget install is sync function
 aptgetinstall = (pkg,callback)->
 	callback false unless pkg?
-	command = "apt-get install -f #{pkg}"
+	command = "apt-get install -y #{pkg}"
 	util.log "executing #{command}..."        
 	exec command, (error, stdout, stderr) =>
-		#util.log "execute - Error : " + error
-		#util.log "execute - stdout : " + stdout
-		#util.log "execute - stderr : " + stderr		
+		util.log "execute - Error : " + error
+		util.log "execute - stdout : " + stdout
+		util.log "execute - stderr : " + stderr		
 		if error?
 			callback  error
 		else			
@@ -73,14 +73,55 @@ InstallPackages = (cb)->
 			cb (true)
 
 
+InstallLXCBaseContainer = (cb)->
+	#lxc-create -t ubuntu -n node -- -r trusty
+	command = "lxc-create -t ubuntu -n node -- -r trusty"
+	util.log "executing #{command}..."        
+	exec command, (error, stdout, stderr) =>
+		util.log "installing LXC Base container - Error : " + error
+		util.log "Installing LXC Base container - stdout : " + stdout
+		util.log "Installing LXC Base container - stderr : " + stderr		
+		if error?			
+			callback false
+		else			
+			callback true
+
 
 
 # Main Routine starts here
+async.series([
+	(callback)=>
+		console.log "Dependent Debian packages are" , config.debianpackages 
+		console.log "Checking the package existence staus" 
+		checkPackageExistence (rsult)->
+			console.log "checkPackageExistence completed - result " + rsult
+			callback(null,"debian package existence check success")
+	,
+	(callback)=>
+		console.log "Installing the packages "
+		InstallPackages (result)->
+			console.log "InstallPackages completed - result " + result
+			callback(null,"Install packages success")
+	,
+	(callback)=>
+		console.log "Installing LXC ubuntu base image"
+		InstallLXCBaseContainer (result)=>
+			console.log "InstallLXCBaseContainer completed - result " + result
+			callback(null,"InstallLXCBaseContainer success")
+	]
+)
+
+
+###
+
 console.log "Dependent Debian packages " , config.debianpackages 
 checkPackageExistence (rsult)->
 	console.log "checkPackageExistence completed - result " + rsult
 	#console.log JSON.stringify packagestatus
 	InstallPackages (result)->
 		console.log "InstallPackages completed - result " + result
+
+		InstallLXCBaseContainer (result)->
+###
 
 

@@ -65,6 +65,28 @@ class IPRoute2
             @setBandwidth ifname, data, (result)=>
                 util.log "setBandwidth result " + result     
 
+
+    addTapLink : (ifname1,ifname2,callback)->
+        command = "ip link delete #{ifname}"        
+        util.log "executing #{command}..."
+        exec command, (error, stdout, stderr) =>
+            util.log "link remove: execute - Error : " + error if error?
+            util.log "link removal: execute - stdout : " + stdout if stdout?
+            util.log "link removal: execute - stderr : " + stderr if stderr?
+            callback(true) unless error?
+            callback(false) if error?
+
+    delLink : (ifname,callback)->
+        command = "ip link delete #{ifname}"        
+        util.log "executing #{command}..."
+        exec command, (error, stdout, stderr) =>
+            util.log "link remove: execute - Error : " + error if error?
+            util.log "link removal: execute - stdout : " + stdout if stdout?
+            util.log "link removal: execute - stderr : " + stderr if stderr?
+            callback(true) unless error?
+            callback(false) if error?
+
+
 module.exports = new IPRoute2
 
 #  Notes
