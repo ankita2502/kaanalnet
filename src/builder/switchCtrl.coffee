@@ -91,11 +91,11 @@ class SwitchBuilder
 					sdata.data.reason = "failed to create"
 				else
 					sdata.data.status = "created"
-					@registry.add sdata
-					return callback
-									"id" : sdata.id
-									"status" : sdata.data.status
-									"reason" : sdata.data.reason if sdata?.data?.reason?
+				@registry.add sdata
+				return callback
+					"id" : sdata.id
+					"status" : sdata.data.status
+					"reason" : sdata.data.reason if sdata?.data?.reason?
 									
 				
 		# if switch make is "ovs"
@@ -110,12 +110,12 @@ class SwitchBuilder
 
 		bridge.addInterface sdata.data.name, body.ifname, (result) =>
 			util.log "addif" + result			
-			if result is false	
-				sdata.data.status = "failed"
-				sdata.data.reason = "failed to add interface"
-			else
-				sdata.data.status = "interface added"
-			@registry.update sdata.id , sdata
+			#if result is false	
+			#	sdata.data.status = "failed"
+			#	sdata.data.reason = "failed to add interface"
+			#else
+			#	sdata.data.status = "interface added"
+			#@registry.update sdata.id , sdata
 			return callback 
 				"id" : sdata.id
 				"status" : sdata.data.status					
@@ -138,7 +138,6 @@ class SwitchBuilder
 					util.log result
 		else
 			bridge  = brctl
-
 
 
 		bridge.enableBridge sdata.data.name, (result) =>

@@ -24,6 +24,7 @@ class switches
             #console.log "post switch response" +res    
             log.info "Switches - switch creation result " + JSON.stringify res
             @uuid = res.id 
+            @config.status = res.status
             callback res
 
     del: (callback)->
@@ -32,17 +33,19 @@ class switches
         switchctrl.del @uuid, (res) =>
             #console.log res
             log.info "Switches -  switch  deletion result " + res
+            @config.status = res.status
             callback res    
 
     get:()->
         "uuid":@uuid
         "config":@config
-        "status":@status
-        "statistics":@statistics
+        #"status":@status
+        #"statistics":@statistics
     stop:(callback)->
         log.info "Switches -   stoping a switch " + JSON.stringify config
         switchctrl.stop @uuid, (res) =>
             log.info "Switches - switch stop result " + JSON.stringify res
+            @config.status = res.status
             #console.log res
             callback res                  
 
@@ -50,6 +53,7 @@ class switches
         log.info "Switches -  starting a switch " + JSON.stringify  @config
         switchctrl.start @uuid, (res) =>
             log.info "Switches -   switch start result " + JSON.stringify res
+            @config.status = res.status
             #console.log res
             callback res                  
 

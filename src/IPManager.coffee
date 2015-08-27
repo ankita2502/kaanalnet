@@ -9,10 +9,6 @@ async = require 'async'
 log = require('./utils/logger').getLogger()
 log.info "IPManager - Logger test message"
 
-#global parameter
-#config = require('./app').config
-#log = require('./app').log
-
 ##########################################################################################################
 #It works perfectly, even its not clean.
 # revisit later.

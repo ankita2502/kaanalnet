@@ -108,20 +108,7 @@ async.series([
 		InstallLXCBaseContainer (result)=>
 			console.log "InstallLXCBaseContainer completed - result " + result
 			callback(null,"InstallLXCBaseContainer success")
-	]
+	],
+	(err,result)=>
+		console.log "TOPOLOGY -  RUN result is  %s ", result
 )
-
-
-###
-
-console.log "Dependent Debian packages " , config.debianpackages 
-checkPackageExistence (rsult)->
-	console.log "checkPackageExistence completed - result " + rsult
-	#console.log JSON.stringify packagestatus
-	InstallPackages (result)->
-		console.log "InstallPackages completed - result " + result
-
-		InstallLXCBaseContainer (result)->
-###
-
-

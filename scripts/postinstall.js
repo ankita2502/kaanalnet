@@ -148,19 +148,10 @@
         });
       };
     })(this)
-  ]);
-
-
-  /*
-  
-  console.log "Dependent Debian packages " , config.debianpackages 
-  checkPackageExistence (rsult)->
-  	console.log "checkPackageExistence completed - result " + rsult
-  	#console.log JSON.stringify packagestatus
-  	InstallPackages (result)->
-  		console.log "InstallPackages completed - result " + result
-  
-  		InstallLXCBaseContainer (result)->
-   */
+  ], (function(_this) {
+    return function(err, result) {
+      return console.log("TOPOLOGY -  RUN result is  %s ", result);
+    };
+  })(this));
 
 }).call(this);

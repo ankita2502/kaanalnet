@@ -225,7 +225,11 @@ class Topology
                                 n.start (result)=>                    
                                     log.info "node start #{n.config.name} result " + JSON.stringify result
                                     return
-                            setTimeout(repeat, 30000);
+                            #something wrong on node creation
+                            if result.data.status is "failed"  
+                                return new Error "node creation failed"
+
+                            setTimeout(repeat, 15000);
                     (err)->                        
                         log.info "createNodes completed"
                         callback(err)                        
@@ -238,7 +242,9 @@ class Topology
                 log.info "createNodes all are processed "
                 cb (true)
 
-
+    ###
+    #currently not used
+    #
     provisionNodes :(cb)->
         async.each @nodeobj, (n,callback) =>
             log.info "provisioning a node #{n.uuid}"
@@ -253,7 +259,7 @@ class Topology
             else
                 log.info "provisionNodes all are processed "
                 cb (true)
-
+    ###
     destroyNodes :()->
         #@tmparray = []
         #@destroySwithes()
@@ -636,6 +642,8 @@ class TopologyMaster
        
     #Device specific rest API f#unctions
 
+    ###
+    #currently not used
     deviceStats: (topolid, deviceid, callback) ->
         obj = @topologyObj[topolid]
         if obj? 
@@ -647,9 +655,9 @@ class TopologyMaster
                 callback new Error "Unknown Device ID"
         else
             callback new Error "Unknown Topology ID"
+    ###
 
-
-     deviceGet: (topolid, deviceid, callback) ->
+    deviceGet: (topolid, deviceid, callback) ->
         obj = @topologyObj[topolid]
         if obj? 
             deviceobj = obj.getNodeObjbyUUID(deviceid)
@@ -661,7 +669,8 @@ class TopologyMaster
         else
             return callback new Error "Unknown Topology ID"
 
-
+    ###
+    #currently not used
     deviceStatus: (topolid, deviceid, callback) ->
         obj = @topologyObj[topolid]
         if obj? 
@@ -673,7 +682,7 @@ class TopologyMaster
                 return callback new Error "Unknown Device ID"
         else
             return callback new Error "Unknown Topology ID"
-
+    ###
     deviceStart: (topolid, deviceid, callback) ->
         obj = @topologyObj[topolid]
         if obj? 
@@ -698,7 +707,8 @@ class TopologyMaster
                 return callback new Error "Unknown Device ID"
         else
             return callback new Error "Unknown Topology ID"
-
+    ###
+    # currently not used
     deviceTrace: (topolid, deviceid, callback) ->
         obj = @topologyObj[topolid]        
         if obj? 
@@ -710,7 +720,7 @@ class TopologyMaster
                 return callback new Error "Unknown Device ID"
         else
             return callback new Error "Unknown Topology ID"
-
+    ###
     deviceDelete: (topolid, deviceid, callback) ->
         obj = @topologyObj[topolid]
         if obj? 

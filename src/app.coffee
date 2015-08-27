@@ -11,7 +11,6 @@ if argv.h?
         -z log level: (trace, debug, info, warn, error -  default value: info)
         -C sdn controller ip (Ex: tcp:0.0.0.0:6633 -   No default values)  
         -S switch type (openvswitch' or linuxbridge , default : linuxbridge)
-        -V virtualization type (default : lxc)
         -W wan subnet (default - 172.17.1.0)
         -L Lan subnet (default - 10.10.10.0)
         -M Mgmt subnet (default - 10.0.3.0)
@@ -56,6 +55,7 @@ log.info "starting the REST api services..."
 topology = require('./Topology')
 topology.configure(config)
 
+#Topology Specific REST APIs
 topologyPost = (req,res,next)->   
     log.info "REST API - POST /Topology received, body contents - " + JSON.stringify req.body
     topology.create req.body, (result) =>
@@ -84,6 +84,38 @@ topologyDelete = (req,res,next)->
         res.send result   
         next()
  
+#Device specific REST APIs
+
+DeviceGet = (req,res,next)->
+    log.info "REST API - GET /Topology/#{req.params.id}/Device/#{req.params.did} received "
+    topology.deviceGet req.params.id,req.params.did, (result) =>
+        log.info "REST API - GET /Topology/:id/Device/:did result  " + JSON.stringify result
+        res.send result   
+        next()
+
+
+
+DeviceDel = (req,res,next)->
+    log.info "REST API - DELETE /Topology/#{req.params.id}/Device/#{req.params.did} received "
+    topology.deviceDelete req.params.id,req.params.did, (result) =>
+        log.info "REST API - DELETE /Topology/:id/Device/:did result  " + JSON.stringify result
+        res.send result   
+        next()
+
+
+DeviceStart = (req,res,next)->
+    log.info "REST API - PUT /Topology/#{req.params.id}/Device/#{req.params.did}/start received "
+    topology.deviceStart req.params.id,req.params.did, (result) =>
+        log.info "REST API - PUT /Topology/:id/Device/:did/Start result  " + JSON.stringify result
+        res.send result   
+        next()
+
+DeviceStop = (req,res,next)->
+    log.info "REST API - PUT /Topology/#{req.params.id}/Device/#{req.params.did}/stop received "
+    topology.deviceStop req.params.id,req.params.did, (result) =>
+        log.info "REST API - PUT /Topology/:id/Device/:did/stop result  " + JSON.stringify result
+        res.send result   
+        next()    
 
 #---------------------------------------------------------------------------------------#
 # REST Server routine starts here
@@ -99,6 +131,12 @@ server.post '/Topology', topologyPost
 server.get '/Topology', topologyList
 server.get '/Topology/:id', topologyGet
 server.del '/Topology/:id', topologyDelete
+
+server.get '/Topology/:id/Device/:did',DeviceGet
+server.del '/Topology/:id/Device/:did',DeviceDel
+#start and stop REST API format to be relooked
+server.put '/Topology/:id/Device/:did/start',DeviceStart
+server.put '/Topology/:id/Device/:did/stop',DeviceStop
 
 server.listen 5050,()->
     console.log 'kaanalNet listening on port : 5050.....'

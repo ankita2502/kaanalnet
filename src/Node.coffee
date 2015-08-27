@@ -12,9 +12,6 @@ vmctrl = require('./builder/vmCtrl')
 log = require('./utils/logger').getLogger()
 log.info "Node - Logger test message"
 
-#global parameter
-#config = require('./app').config
-#log = require('./app').log
 
 #utility functions 
 #Todo:  Not scalable....To be modified
@@ -128,8 +125,8 @@ class node
     get : () ->
         "id" : @uuid
         "config": @config
-        "status": @status
-        "statistics":@statistics
+        #"status": @status
+        #"statistics":@statistics
 module.exports = node
 
 

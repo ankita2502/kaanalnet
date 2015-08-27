@@ -88,6 +88,7 @@ class VmBuilder
         
         callback @registry.get data
 
+    #This create code to be relooked.. To be converted to async
     create:(data,callback) ->
         try         
             vmdata = new VmData(null, data )
@@ -110,7 +111,7 @@ class VmBuilder
                     vm.createContainer vmdata.data.name, vmdata.data.image, (result) =>
                         util.log "createvm " + result
                         if result is false
-                            vmdata.data.status = "failure"
+                            vmdata.data.status = "failed"
                             vmdata.data.reason = "VM already exists"
                             @registry.update vmdata.id, vmdata.data
                             return                     
@@ -228,7 +229,7 @@ class VmBuilder
                     console.log "setLinkCahrs output " + result
                 callback true
                         
-
+    ###
     packettrace:(data, callback)->
         vmdata = @registry.get data
         return callback new Error "VM details not found in DB" unless vmdata?
@@ -255,5 +256,5 @@ class VmBuilder
             return callback        
                 "id":vmdata.id
                 "status":"Packet Trace enabled"                
-
+    ###
 module.exports = new VmBuilder
