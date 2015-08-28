@@ -114,7 +114,8 @@ class VmBuilder
                             vmdata.data.status = "failed"
                             vmdata.data.reason = "VM already exists"
                             @registry.update vmdata.id, vmdata.data
-                            return                     
+                            return       
+                        vm.clearInterface(vmdata.data.name)
                         if vmdata.data.ifmap?
                             for x in vmdata.data.ifmap                      
                                 if x.type is "mgmt"

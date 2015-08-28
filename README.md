@@ -14,10 +14,18 @@ NOTE: PLEASE DO ALL(INSTALLATION & EXECUTION) THE ACTIVITY AS  ROOT USER.
 Note : Currently supported only on DEBIAN flavors (Tested only on UBUNTU 14.04)
 
 Dependent packages (lxc,openvswitch,linuxbridge and ubuntu linux container) will be installed as part of this node package installation, Hence  ROOT access is required.
-
+## a. npm 
     #npm install kaanalnet
 
 Installation will take approx 15-30mins to complete.
+
+
+## b. manual
+    git clone https://github.com/sureshkvl/kaanalnet
+    cd kaanalnet
+    npm install
+    node scripts/postinstall.js
+
 
 #2.Start the Application 
 
@@ -32,6 +40,10 @@ Installation will take approx 15-30mins to complete.
     2. check "lxc-ls --fancy" command, and ensure "nodeimg"(the default image name) is present.
         If not present, Execute the below command to create a image.
         lxc-create -t ubuntu -n nodeimg
+
+    3. start the nodeimg and login. (username : ubuntu password: ubuntu)
+            lxcstart -n nodeimg
+       Ensure you are able to login via ssh also.. 
 
     3. The default lxc bridge ip range is 10.0.3.0. To check,
        ifconfig lxcbr0  

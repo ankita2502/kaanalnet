@@ -75,4 +75,11 @@ class LXCControl
 			else
 				callback "running"			
 
+	clearInterface:(containerName)->
+		filename= "/var/lib/lxc/#{containerName}/rootfs/etc/network/interfaces"
+		fs.unlinkSync filename
+		#fs.appendFileSync(filename,"auto lo \n iface lo inet loopback\n")
+
+
+
 module.exports = new LXCControl
