@@ -7,7 +7,7 @@ config = require('../package.json').config
 
 packagestatus = []
 
-templatepath = "./../scripts/lxc-ubuntu"
+templatepath = "ubuntu"
 
 dpkgquery = (pkg,callback) ->
 	return callback false unless pkg?

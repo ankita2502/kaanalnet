@@ -38,13 +38,13 @@ log.info "System Configuration " + JSON.stringify config
 console.log "System Configuration " + JSON.stringify config
 #log.debug, log.info, log.warn, log.notice,log.warning, log.critical, log.alert, log.emergency
 
-#check the system capability to run vnetlab
+#check the system capability to run kaanalnet
 systemcheck = ()->
     log.info "performing system check"
 	log.debug "checking the lxc installation files"
 	log.info "system check passed"
 
-systemcheck()
+#systemcheck()
 
 
 log.info "starting the REST api services..."

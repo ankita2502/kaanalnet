@@ -4,7 +4,7 @@ fs = require('fs')
 
 @log = null
 
-createLogger = (level = 'debug', filename = '/var/log/vnetlabs.log')->
+createLogger = (level = 'debug', filename = '/var/log/kaanalnet.log')->
 	@log = new Log(level, fs.createWriteStream(filename))  
 	@log  	  	
 

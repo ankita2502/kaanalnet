@@ -12,7 +12,7 @@
 
   packagestatus = [];
 
-  templatepath = "./../scripts/lxc-ubuntu";
+  templatepath = "ubuntu";
 
   dpkgquery = function(pkg, callback) {
     var command;
