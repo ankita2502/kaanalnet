@@ -45,6 +45,9 @@ Installation will take approx 15-30mins to complete.
             lxcstart -n nodeimg
        Ensure you are able to login via ssh also.. 
 
+       once checked, stop the "nodeimg" container as below,
+            lxcstop -n nodeimg
+
     3. The default lxc bridge ip range is 10.0.3.0. To check,
        ifconfig lxcbr0  
     
