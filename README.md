@@ -21,7 +21,7 @@ Installation will take approx 15-30mins to complete.
 
 #2.Start the Application 
 
-##Checklist before start the application:
+##a.Checklist before start the application:
 
     1. check "lxc","openvswitch-switch" packages are installed by using the below commands.
         dpkg-query -s lxc
@@ -39,7 +39,7 @@ Installation will take approx 15-30mins to complete.
        If not 10.0.3.0 subnet, then the correct IP Range should be given "-M Mgmt subnet" as parameter during the application  start
 
 
-##application command line options
+##b.Command line options:
 To know the command line options
 
     # npm start -- -h
@@ -56,9 +56,9 @@ To know the command line options
     -I Lxc image name (default: "nodeimg")
 
 
-##Traditional network:
+##c.Traditional network:
 
-###1. Start the application with default values  :
+###i) Start the application with default values
 
 
      # npm start 
@@ -68,7 +68,7 @@ To know the command line options
     kaanalNet listening on port : 5050.....
 
 
-###2. Start the application with openvswitch and different imagename
+###ii) Start the application with openvswitch and different imagename
     # npm start -- -z debug -S openvswitch -I device
     > kaanalnet@0.0.4 start /root/kaanalnet
     > nodejs lib/app.js "-z" "debug" "-S" "openvswitch" "-I" "device"
@@ -76,7 +76,7 @@ To know the command line options
     kaanalNet listening on port : 5050.....
 
 
-## SDN Network
+##d. SDN Network:
 
 Note: Linux bridge doesnt support openflow, hence only openvswitch to be used for SDN network
 
@@ -93,10 +93,12 @@ Start the SDN Controller(Ex: opendaylight) and ensure it is running.
 #3.REST APIs
 
 KaanalNet works based on the REST APIs. RESTAPI document is available in
-https://github.com/sureshkvl/kaanalnet/RestAPIs.md
+
+https://github.com/sureshkvl/kaanalnet/blob/master/RestAPIs.md
 
 Sample Topology examples are located in 
-https://github.com/sureshkvl/kaanalnet/docs/topology-apis
+
+https://github.com/sureshkvl/kaanalnet/tree/master/docs/topology-apis
 
 
 #4.How to use the Emulator

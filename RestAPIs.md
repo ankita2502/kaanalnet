@@ -1,6 +1,6 @@
 #Topology REST APIs
 
-## POST /Topology
+## 1. POST /Topology
 
 This API creates a new Topology. The input JSON data majorly divides in 3 sections - switches, nodes, links.
 
@@ -105,7 +105,7 @@ Response Data:
 
 
 
-## GET /Topology/:id
+## 2. GET /Topology/:id
 
 
 This API, retrives the status Topology creation details and individual device details. (Device ID will be used for controlling the device by Device specific APIs)
@@ -209,7 +209,7 @@ Note:  In the response data ,all Node and Switch "status" should be "started". I
 
 
 
-## DELETE /Topology/:id
+## 3. DELETE /Topology/:id
 
 This API deletes the topology..It deletes the Nodes,switches,links 
 
@@ -231,7 +231,7 @@ Response Data :
 Only Nodes are supported.  Switches are not yet supported.
 Device ID (:did) can be retrived by GET /Topology/:id API
 
-## GET /Topology/:id/Device/:did
+## 1. GET /Topology/:id/Device/:did
 
 Retrives the details and status of the device.
 
@@ -280,11 +280,11 @@ Response data :
     }
 
 
-##DELETE /Topology/:id/Device/:did
+## 2. DELETE /Topology/:id/Device/:did
 Deletes the device.
 
 
-##PUT /Topology/:id/Device/:did/stop
+##3. PUT /Topology/:id/Device/:did/stop
 stops the device temporarily, which can be started again by Start API.
 
 Example :
@@ -299,7 +299,7 @@ Response data:
     }
 
 
-##PUT /Topology/:id/Device/:did/Start
+## 4. PUT /Topology/:id/Device/:did/Start
 Starts the device.
 
 Example : 
