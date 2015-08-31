@@ -12,6 +12,7 @@ util = require 'util'
 IPManager = require('./IPManager')
 node = require('./Node')
 switches = require('./Switches')
+test = require('./Test')
 
 
 #Log handler
@@ -24,6 +25,78 @@ sindex = 1
 #MGMT_SUBNET = "10.0.3.0"
 #WAN_SUBNET = "172.16.1.0"
 #LAN_SUBNET = "10.10.10.0"
+
+
+#============================================================================================================
+class TestRegistry extends StormRegistry
+    constructor: (filename) ->
+        @on 'load', (key,val) ->
+            #log.debug "restoring #{key} with:",val
+            entry = new TestData key,val
+            if entry?
+                entry.saved = true
+                @add entry
+
+        @on 'removed', (entry) ->
+            entry.destructor() if entry.destructor?
+
+        super filename
+
+    add: (data) ->
+        return unless data instanceof TestData
+        entry = super data.id, data
+
+    update: (data) ->        
+        super data.id, data    
+
+    get: (key) ->
+        entry = super key
+        return unless entry?
+
+        if entry.data? and entry.data instanceof TestData
+            entry.data.id = entry.id
+            entry.data
+        else
+            entry
+
+#============================================================================================================
+
+#============================================================================================================
+
+class TestData extends StormData
+    TestSchema =
+        name: "Test"
+        type: "object"        
+        #additionalProperties: true
+        properties:                        
+            name: {type:"string", required:true}
+            tests:
+                type: "array"
+                items:
+                    name: "test"
+                    type: "object"
+                    required: true
+                    properties:
+                        sourcenodes :
+                            type: "array"
+                            items:
+                                type: "string"
+                                required: true
+                        destnodes :
+                            type: "array"
+                            items:
+                                type: "string"
+                                required: true
+                        traffictype: {type:"string", required:true}            
+                        starttime:  {type:"string", required:true}    
+                        duration:  {type:"string", required:true}                           
+                        trafficconfig:
+                            type: "object"
+                            required: true
+
+    constructor: (id, data) ->
+        super id, data, TestSchema
+
 
 #============================================================================================================
 class TopologyRegistry extends StormRegistry
@@ -116,10 +189,12 @@ class Topology
         @config = {}
         @sysconfig = {}
         @status = {}
-        @statistics = {}        
+        @statistics = {}    
+
         @switchobj = []
         @nodeobj =  []
         @linksobj = []
+        @testobjs = []
         log.info "New Topology object is created"
 
     systemconfig:(config) ->
@@ -581,6 +656,34 @@ class Topology
         "nodes" : nodestatus
         "switches":  switchstatus    
 
+    #Test specific functions
+    createTest :(testdata)->
+        console.log "createTest called with " + JSON.stringify testdata
+
+        for t in testdata.data.tests
+            srcnode = @getNodeObjbyName(t.sourcenodes[0])
+            sourcenodeip = srcnode.mgmtip
+            destnode = @getNodeObjbyName(t.destnodes[0])
+            destnodeip = destnode.lanip 
+
+            testData =
+                "name" : "#{sourcenodeip}_#{destnodeip}"
+                "source" : sourcenodeip
+                "destination" : destnodeip
+                "type": t.traffictype
+                "starttime": t.starttime
+                "duration": t.duration
+                "config": t.trafficconfig
+            testobj = new test(testData)
+            testobj.run()
+            @testobjs.push testobj     
+
+    getTestStatus :(callback)->
+        teststatus = []
+        for t in @testobjs
+            teststatus.push t.get()
+        callback teststatus
+        
 #============================================================================================================
 
 
@@ -588,6 +691,8 @@ class TopologyMaster
     constructor :() ->
         #@registry = new TopologyRegistry filename if filename?
         @registry = new TopologyRegistry
+        @testregistry = new TestRegistry
+
         @topologyObj = {}
         @sysconfig = {}
         log.info "TopologyMaster - constructor - TopologyMaster object is created"  
@@ -730,6 +835,42 @@ class TopologyMaster
                     return callback result
             else                
                 return callback new Error "Unknown Device ID"
+        else
+            return callback new Error "Unknown Topology ID"
+
+    testSuiteCreate: (topolid, data, callback) ->
+        obj = @topologyObj[topolid]
+        if obj? 
+            try             
+                testdata = new TestData null, data    
+            catch err
+                log.error "TopologyMaster - Test create - invalid schema " + JSON.stringify err
+                return callback new Error "Invalid Input "
+            finally             
+                #log.info "TopologyMaster - create - testData " + JSON.stringify testdata 
+
+            #finally create a project                    
+            log.info "TopologyMaster - Test Input JSON  schema check is passed " + JSON.stringify testdata            
+            obj.createTest testdata
+            return callback @testregistry.add testdata
+
+        else
+            return callback new Error "Unknown Topology ID"
+
+    
+
+    testSuiteList: (topolid, callback) ->
+        obj = @topologyObj[topolid]
+        if obj? 
+            return callback @testregistry.list()          
+        else
+            return callback new Error "Unknown Topology ID"    
+
+    testSuiteGet: (topolid, data, callback) ->
+        obj = @topologyObj[topolid]
+        if obj? 
+            obj.getTestStatus data ,(result)=>
+            return callback result
         else
             return callback new Error "Unknown Topology ID"
 

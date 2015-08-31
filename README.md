@@ -9,7 +9,7 @@ The Goal of the project is, create a test platform for SDN  which aims to cover 
 
 NOTE: PLEASE DO ALL(INSTALLATION & EXECUTION) THE ACTIVITY AS  ROOT USER.
 
-#1.Installation
+# 1.Installation
 
 Note : Currently supported only on DEBIAN flavors (Tested only on UBUNTU 14.04)
 
@@ -27,9 +27,9 @@ Installation will take approx 15-30mins to complete.
     node scripts/postinstall.js
 
 
-#2.Start the Application 
+# 2.Start the Application 
 
-##a.Checklist before start the application:
+## a.Checklist before start the application:
 
     1. check "lxc","openvswitch-switch" packages are installed by using the below commands.
         dpkg-query -s lxc
@@ -54,7 +54,7 @@ Installation will take approx 15-30mins to complete.
        If not 10.0.3.0 subnet, then the correct IP Range should be given "-M Mgmt subnet" as parameter during the application  start
 
 
-##b.Command line options:
+## b.Command line options:
 To know the command line options
 
     # npm start -- -h
@@ -71,9 +71,9 @@ To know the command line options
     -I Lxc image name (default: "nodeimg")
 
 
-##c.Traditional network:
+## c.Traditional network:
 
-###i) Start the application with default values
+### i) Start the application with default values
 
 
      # npm start 
@@ -83,7 +83,7 @@ To know the command line options
     kaanalNet listening on port : 5050.....
 
 
-###ii) Start the application with openvswitch and different imagename
+### ii) Start the application with openvswitch and different imagename
     # npm start -- -z debug -S openvswitch -I device
     > kaanalnet@0.0.4 start /root/kaanalnet
     > nodejs lib/app.js "-z" "debug" "-S" "openvswitch" "-I" "device"
@@ -91,7 +91,7 @@ To know the command line options
     kaanalNet listening on port : 5050.....
 
 
-##d. SDN Network:
+## d. SDN Network:
 
 Note: Linux bridge doesnt support openflow, hence only openvswitch to be used for SDN network
 
@@ -105,7 +105,7 @@ Start the SDN Controller(Ex: opendaylight) and ensure it is running.
     kaanalNet listening on port : 5050.....
 
 
-#3.REST APIs
+# 3.REST APIs
 
 KaanalNet works based on the REST APIs. RESTAPI document is available in
 
@@ -116,7 +116,7 @@ Sample Topology examples are located in
 https://github.com/sureshkvl/kaanalnet/tree/master/docs/topology-apis
 
 
-#4.How to use the Emulator
+# 4.How to use the Emulator
 
 1. start the kaanalnet application as mentioned in chapter(2)
 2. Use the REST Client(CHROME PostMAN, Curl,etc) to post the topology.REST API guide have the detailed information about topology creation status etc.

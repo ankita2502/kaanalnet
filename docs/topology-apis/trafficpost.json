@@ -1,0 +1,21 @@
+{
+    "name":"sampletest",
+    "tests":[
+        {
+            "sourcenodes":["n1"],
+            "destnodes":["n2"],
+            "traffictype":"ping",
+            "starttime":"0",
+            "duration":"300",
+            "trafficconfig":
+            {
+                "adpative":"yes",
+                "flood":"no",
+                "count":10,
+                "packetsize":1000,
+                "interval":100
+            }
+        }
+        
+        ]
+}

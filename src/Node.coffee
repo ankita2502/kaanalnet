@@ -50,6 +50,7 @@ class node
         log.debug "lan interface " + JSON.stringify interf
         @ifindex++
         @ifmap.push  interf
+        @lanip = ipaddress
 
     addWanInterface :(brname, ipaddress, subnetmask, gateway , characterstics) ->         
         #console.log "inside addWanInterface function"
@@ -76,6 +77,7 @@ class node
             "type":"mgmt"
         log.debug "mgmt interface" + JSON.stringify interf
         @ifmap.push  interf
+        @mgmtip = ipaddress
         #console.log @ifmap
 
     create : (callback)->

@@ -117,6 +117,30 @@ DeviceStop = (req,res,next)->
         res.send result   
         next()    
 
+
+#TestSuite API functions
+testSuitePost = (req,res,next)->
+    log.info "REST API - POST /Topology/#{req.params.id}/Test received "
+    topology.testSuiteCreate req.params.id, req.body, (result) =>
+        log.info "REST API - POST /Topology/:id/Test result  " + JSON.stringify result
+        res.send result   
+        next()    
+
+
+testSuiteList = (req,res,next)->
+    log.info "REST API - GET /Topology/#{req.params.id}/Device/#{req.params.did}/stop received "
+    topology.testSuiteList req.params.id, (result) =>
+        log.info "REST API - GET /Topology/:id/Test result  " + JSON.stringify result
+        res.send result   
+        next()    
+
+testSuiteGet = (req,res,next)->
+    log.info "REST API - GET /Topology/#{req.params.id}/Test/#{req.params.tid} received "
+    topology.testSuiteGet req.params.id,req.params.tid, (result) =>
+        log.info "REST API - GET /Topology/:id/Test/:tid result  " + JSON.stringify result
+        res.send result   
+        next()    
+
 #---------------------------------------------------------------------------------------#
 # REST Server routine starts here
 #---------------------------------------------------------------------------------------#
@@ -126,7 +150,7 @@ server.use(restify.queryParser());
 server.use(restify.jsonp());
 server.use(restify.bodyParser());
 
-
+#Topology APIs
 server.post '/Topology', topologyPost
 server.get '/Topology', topologyList
 server.get '/Topology/:id', topologyGet
@@ -137,6 +161,15 @@ server.del '/Topology/:id/Device/:did',DeviceDel
 #start and stop REST API format to be relooked
 server.put '/Topology/:id/Device/:did/start',DeviceStart
 server.put '/Topology/:id/Device/:did/stop',DeviceStop
+
+#Test APIs
+server.post '/Topology/:id/Test', testSuitePost
+server.get '/Topology/:id/Test', testSuiteList
+server.get '/Topology/:id/Test/:tid', testSuiteGet
+
+
+
+
 
 server.listen 5050,()->
     console.log 'kaanalNet listening on port : 5050.....'
