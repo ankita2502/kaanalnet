@@ -141,6 +141,13 @@ testSuiteGet = (req,res,next)->
         res.send result   
         next()    
 
+testSuiteDelete = (req,res,next)->
+    log.info "REST API - DELETE /Topology/#{req.params.id}/Test/#{req.params.tid} received "
+    topology.testSuiteDelete req.params.id,req.params.tid, (result) =>
+        log.info "REST API - DELETE /Topology/:id/Test/:tid result  " + JSON.stringify result
+        res.send result   
+        next()    
+
 #---------------------------------------------------------------------------------------#
 # REST Server routine starts here
 #---------------------------------------------------------------------------------------#
@@ -166,9 +173,7 @@ server.put '/Topology/:id/Device/:did/stop',DeviceStop
 server.post '/Topology/:id/Test', testSuitePost
 server.get '/Topology/:id/Test', testSuiteList
 server.get '/Topology/:id/Test/:tid', testSuiteGet
-
-
-
+server.del '/Topology/:id/Test/:tid', testSuiteDelete
 
 
 server.listen 5050,()->

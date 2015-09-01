@@ -667,7 +667,8 @@ class Topology
             destnodeip = destnode.lanip 
 
             testData =
-                "name" : "#{sourcenodeip}_#{destnodeip}"
+                "testsuiteid": testdata.id
+                "name" : "test_#{sourcenodeip}_#{destnodeip}"
                 "source" : sourcenodeip
                 "destination" : destnodeip
                 "type": t.traffictype
@@ -678,12 +679,27 @@ class Topology
             testobj.run()
             @testobjs.push testobj     
 
-    getTestStatus :(callback)->
-        teststatus = []
-        for t in @testobjs
-            teststatus.push t.get()
-        callback teststatus
-        
+    deleteTest :(testid)->
+
+
+    getTestStatus :(testsuiteid, cb)->
+        teststatus = []        
+        async.each @testobjs, (obj,callback) =>  
+            if obj.testsuiteid is testsuiteid   
+                obj.get (result)=>
+                    log.info "Topology - Switch getTestStatus result " + result
+                    teststatus.push result
+                    callback()
+            else
+                callback()
+        ,(err) =>
+            if err
+                log.error "getTestStatus error occured " + JSON.stringify err
+                cb(err)
+            else
+                log.info "getTestStatus  all are processed "
+                cb (teststatus)
+
 #============================================================================================================
 
 
@@ -741,7 +757,9 @@ class TopologyMaster
     get : (id, callback) ->
         obj = @topologyObj[id]
         if obj? 
-            return callback obj.get()
+            obj.get(result) =>
+                return callback result
+
         else
             return callback new Error "Unknown Topology ID"
        
@@ -866,14 +884,21 @@ class TopologyMaster
         else
             return callback new Error "Unknown Topology ID"    
 
-    testSuiteGet: (topolid, data, callback) ->
+    testSuiteGet: (topolid, testsuiteid, callback) ->
         obj = @topologyObj[topolid]
         if obj? 
-            obj.getTestStatus data ,(result)=>
-            return callback result
+            obj.getTestStatus testsuiteid ,(result)=>
+                log.info "main routine testsuite get " , result
+                return callback result
         else
             return callback new Error "Unknown Topology ID"
-
+    testSuiteDelete: (topolid, testsuiteid, callback) ->
+        obj = @topologyObj[topolid]
+        if obj? 
+            obj.deleteTest testsuiteid
+            @testregistry.remove testsuiteid
+        else
+            return callback new Error "Unknown Topology ID"
 
 #============================================================================================================
 module.exports =  new TopologyMaster
