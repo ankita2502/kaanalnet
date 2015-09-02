@@ -1,7 +1,7 @@
 restify = require 'restify'
 util = require('util')
 fs = require 'fs'
-
+async = require 'async'
 
 argv = require('minimist')(process.argv.slice(2))
 if argv.h?
@@ -39,13 +39,55 @@ console.log "System Configuration " + JSON.stringify config
 #log.debug, log.info, log.warn, log.notice,log.warning, log.critical, log.alert, log.emergency
 
 #check the system capability to run kaanalnet
+#run ins async series mode
 systemcheck = ()->
-    log.info "performing system check"
-	log.debug "checking the lxc installation files"
-	log.info "system check passed"
+    async.series([
+        (callback)=>
+            log.info "SYSTEMCHECK : Checking the LXC..."            
+            lxcdriver = require('./builder/lxcdriver')
+            lxcdriver.checkContainerExistence config.lxcimage,(result)=>
+                if result is "available"
+                    log.info "SYSTEMCHECK: LXC Image < #{config.lxcimage} > present in the system.. PASSED "
+                    callback(null,"LXC Check success") 
+                else    
+                    log.error "SYSTEMCHECK: LXC Image <#{config.lxcimage}> NOT present in the system.. FAILED"                    
+                    callback new Error ('LXC Check failed') 
+        ,
+        (callback)=>
+            log.info "SYSTEMCHECK : Checking the Linux bridge..."  
+            brctl = require('./builder/brctldriver')
+            testbridge = "testbridge"
+            brctl.createBridge testbridge,(result)=>  
+                if result is true
+                    log.info "SYSTEMCHECK: LinuxBridge #{testbridge} creation success -- PASSED" 
+                    brctl.deleteBridge testbridge,(result)=>
+                    callback(null,"LinuxBridege Check success") 
+                else
+                    log.error "SYSTEMCHECK: LinuxBridge #{testbridge} creation Failure ..Failed" 
+                    callback new Error ('LinuxBridge check failed')
+        ,
+        (callback)=>
+            log.info "SYSTEMCHECK : Checking the OpenVSwitch..."  
+            ovs = require('./builder/ovsdriver')
+            testbridge = "testbridge"
+            ovs.createBridge testbridge,(result)=>  
+                if result is true
+                    log.info "SYSTEMCHECK: OpenVSwitch #{testbridge} creation success -- PASSED" 
+                    ovs.deleteBridge testbridge,(result)=>
+                    callback(null,"OpenVSwitch Check success") 
+                else
+                    log.error "SYSTEMCHECK: OpenVSwitch #{testbridge} creation Failure ..Failed" 
+                    callback new Error ('OpenVSwitch check failed')            
 
-#systemcheck()
+        ],
+        (err,result)=>
+            log.info "SYSTEMCHECK -  result is  %s ", result
+            if err
+                throw new Error "Dependent packages are not available - Failed"
+    )         
 
+#
+systemcheck()
 
 log.info "starting the REST api services..."
 #---------------------------------------------------------------------------------------#
@@ -166,8 +208,8 @@ server.del '/Topology/:id', topologyDelete
 server.get '/Topology/:id/Device/:did',DeviceGet
 server.del '/Topology/:id/Device/:did',DeviceDel
 #start and stop REST API format to be relooked
-server.put '/Topology/:id/Device/:did/start',DeviceStart
-server.put '/Topology/:id/Device/:did/stop',DeviceStop
+server.put '/Topology/:id/Device/:did/Start',DeviceStart
+server.put '/Topology/:id/Device/:did/Stop',DeviceStop
 
 #Test APIs
 server.post '/Topology/:id/Test', testSuitePost

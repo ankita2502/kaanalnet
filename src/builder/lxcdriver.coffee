@@ -80,6 +80,19 @@ class LXCControl
 		fs.unlinkSync filename
 		#fs.appendFileSync(filename,"auto lo \n iface lo inet loopback\n")
 
+	checkContainerExistence: (containerName,callback)->
+		command = "lxc-info -n #{containerName} "
+		util.log "executing #{command}..."        
+		exec command, (error, stdout, stderr) =>
+			util.log "lxcdriver: execute - Error : " + error
+			util.log "lxcdriver: execute - stdout : " + stdout
+			util.log "lxcdriver: execute - stderr : " + stderr
+			if error or not stdout?
+				callback "notavailable"
+			else
+				callback "available"			
+
+
 
 
 module.exports = new LXCControl

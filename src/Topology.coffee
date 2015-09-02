@@ -658,6 +658,7 @@ class Topology
 
     #Test specific functions
     createTest :(testdata)->
+        #can be converted in to async model
         console.log "createTest called with " + JSON.stringify testdata
 
         for t in testdata.data.tests
@@ -757,8 +758,9 @@ class TopologyMaster
     get : (id, callback) ->
         obj = @topologyObj[id]
         if obj? 
-            obj.get(result) =>
-                return callback result
+            return callback obj.get()
+            #obj.get (result)=>
+            #    return callback result
 
         else
             return callback new Error "Unknown Topology ID"
