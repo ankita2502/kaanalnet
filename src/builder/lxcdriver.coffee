@@ -7,9 +7,9 @@ class LXCControl
         callback false unless command?
         util.log "executing #{command}..."        
         exec command, (error, stdout, stderr) =>
-        	util.log "lxcdriver: execute - Error : " + error
-        	util.log "lxcdriver: execute - stdout : " + stdout
-        	util.log "lxcdriver: execute - stderr : " + stderr
+        	#util.log "lxcdriver: execute - Error : " + error if error?
+        	#util.log "lxcdriver: execute - stdout : " + stdout
+        	#util.log "lxcdriver: execute - stderr : " + stderr if stderr?
         	if error
                 callback false
             else
@@ -67,9 +67,9 @@ class LXCControl
 		command = "lxc-ls --running #{containerName} "
 		util.log "executing #{command}..."        
 		exec command, (error, stdout, stderr) =>
-			util.log "lxcdriver: execute - Error : " + error
-			util.log "lxcdriver: execute - stdout : " + stdout
-			util.log "lxcdriver: execute - stderr : " + stderr
+			util.log "lxcdriver: execute - Error : " + error if error?
+			#util.log "lxcdriver: execute - stdout : " + stdout
+			util.log "lxcdriver: execute - stderr : " + stderr if stderr?
 			if error or not stdout?
 				callback "notrunning"
 			else
@@ -84,15 +84,49 @@ class LXCControl
 		command = "lxc-info -n #{containerName} "
 		util.log "executing #{command}..."        
 		exec command, (error, stdout, stderr) =>
-			util.log "lxcdriver: execute - Error : " + error
-			util.log "lxcdriver: execute - stdout : " + stdout
-			util.log "lxcdriver: execute - stderr : " + stderr
+			#util.log "lxcdriver: execute - Error : " + error if error?
+			#util.log "lxcdriver: execute - stdout : " + stdout
+			#util.log "lxcdriver: execute - stderr : " + stderr if stderr?
 			if error or not stdout?
 				callback "notavailable"
 			else
 				callback "available"			
 
+	updateHostStartupScript: (containerName)->
+		filename= "/var/lib/lxc/#{containerName}/rootfs/etc/init.d/rc.local"
+		agentcmd = "\nnodejs /home/ubuntu/testagent/lib/app.js > /var/log/testagent.log & \n"
+		iperf1 = "iperf -s > /var/log/iperf_tcp_server.log & \n"
+		iperf2 = "iperf -s -u > /var/log/iperf_udp_server.log & \n"
+		fs.appendFileSync(filename,agentcmd)
+		fs.appendFileSync(filename,iperf1)
+		fs.appendFileSync(filename,iperf2)
 
+	updateRouterConfig : (ifmap, containerName)->
+		zebrafile = "/var/lib/lxc/#{containerName}/rootfs/etc/zebra.conf"
+		ospffile = "/var/lib/lxc/#{containerName}/rootfs/etc/ospf.conf"
+		zebraconf = "hostname zebra \npassword zebra \nenable password zebra \n"
+		for i in ifmap
+			zebraconf += "interface  #{i.ifname} \n"			
+			zebraconf += "   ip address #{i.ipaddress}/30 \n" if i.type is "wan"
+			zebraconf += "   ip address #{i.ipaddress}/27 \n" if i.type is "lan"
+			zebraconf += "   ip address #{i.ipaddress}/24 \n" if i.type is "mgmt"		
+		util.log "zebrafile " +  zebraconf
+		fs.appendFileSync(zebrafile,zebraconf)
+		ospfconf = "hostname ospf \npassword zebra \nenable password zebra \nrouter ospf\n  "
+		for i in ifmap
+			ospfconf += "   network #{i.ipaddress}/24 area 0 \n" unless i.type is "mgmt"
+		util.log "ospfd fils",ospfconf
+		fs.appendFileSync(ospffile,ospfconf)
 
+	updateRouterStartupScript : (containerName)->
+		util.log "in updateRouterStartupScript "
+		filename= "/var/lib/lxc/#{containerName}/rootfs/etc/init.d/rc.local"
+		zebracmd = "\nzebra -f /etc/zebra.conf -d & \n"
+		ospfcmd = "ospfd -f /etc/ospf.conf -d & \n"
+		util.log "zebracmd " + zebracmd
+		util.log "ospfdcmd " + ospfcmd
+		fs.appendFileSync(filename,zebracmd)
+		fs.appendFileSync(filename,ospfcmd)
+		return
 
 module.exports = new LXCControl

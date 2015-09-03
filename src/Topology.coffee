@@ -156,6 +156,7 @@ class TopologyData extends StormData
                     required: true
                     properties:
                             name: {type:"string", required:true}            
+                            type: {type:"string", required:false}
             links:
                 type: "array"
                 items:

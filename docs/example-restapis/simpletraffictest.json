@@ -1,0 +1,54 @@
+{
+	"TestSuiteName":"TrafficTest",
+	"TopologyID":"xxxxx",
+	"Tests":
+	{
+		"Predefinedtests":[{"template":"pingall","duration":60,"order":1},"udp1Mbpsall","tcp1Mbpsall"],
+		"customtests": [{	}]
+	}
+}
+
+{
+"TopologyID" : "xx",
+"Name": "xcx",1
+Tests:[
+{
+SrcNodes: n1
+dstNodes: n2
+TrafficType: ping
+TrafficConfig: {}
+starttime :
+duration :
+}
+]
+}
+
+{
+SrcNode: n1
+dstNode: n2
+TrafficType: tcp
+TrafficConfig: {}
+starttime :
+duration :
+}
+
+{
+SrcNode: n1
+dstNode: n2
+TrafficType: udp
+TrafficConfig: {}
+starttime :
+duration :
+}
+
+{
+SrcNode: n1
+dstNode: n2
+TrafficType: http
+TrafficConfig: {}
+starttime :
+duration :
+}
+
+
+

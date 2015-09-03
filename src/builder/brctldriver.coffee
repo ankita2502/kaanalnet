@@ -7,9 +7,9 @@ class BridgeControl
         callback false unless command?
         util.log "executing #{command}..."        
         exec command, (error, stdout, stderr) =>
-        	util.log "brctldriver: execute - Error : " + error
-        	util.log "brctldriver: execute - stdout : " + stdout
-        	util.log "brctldriver: execute - stderr : " + stderr
+        	#util.log "brctldriver: execute - Error : " + error if error?
+        	#util.log "brctldriver: execute - stdout : " + stdout
+        	#util.log "brctldriver: execute - stderr : " + stderr if stderr?
         	if error
                 callback false
             else
@@ -50,9 +50,9 @@ class BridgeControl
 	getStatus: (bridgename, callback) ->
 		command = "brctl show #{bridgename}"
 		exec command, (error, stdout, stderr) =>
-        	util.log "brctldriver: execute - Error : " + error
-        	util.log "brctldriver: execute - stdout : " + stdout
-        	util.log "brctldriver: execute - stderr : " + stderr
+        	#util.log "brctldriver: execute - Error : " + error if error?
+        	#util.log "brctldriver: execute - stdout : " + stdout
+        	#util.log "brctldriver: execute - stderr : " + stderr if stderr?
         	if stdout? or error            
                 callback "notrunning"
             else

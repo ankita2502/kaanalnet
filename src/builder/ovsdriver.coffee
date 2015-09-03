@@ -7,9 +7,9 @@ class BridgeControl
         callback false unless command?
         util.log "executing #{command}..."        
         exec command, (error, stdout, stderr) =>
-        	util.log "ovsdriver: execute - Error : " + error
-        	util.log "ovsdriver: execute - stdout : " + stdout
-        	util.log "ovsdriver: execute - stderr : " + stderr
+        	#util.log "ovsdriver: execute - Error : " + error
+        	#util.log "ovsdriver: execute - stdout : " + stdout
+        	#util.log "ovsdriver: execute - stderr : " + stderr
         	if error
                 callback false
             else
@@ -50,9 +50,9 @@ class BridgeControl
 	getStatus: (bridgename, callback) ->
 		command = "ovs-vsctl show #{bridgename}"
 		exec command, (error, stdout, stderr) =>
-        	util.log "ovsdriver: execute - Error : " + error
-        	util.log "ovsdriver: execute - stdout : " + stdout
-        	util.log "ovsdriver: execute - stderr : " + stderr
+        	#util.log "ovsdriver: execute - Error : " + error
+        	#util.log "ovsdriver: execute - stdout : " + stdout
+        	#util.log "ovsdriver: execute - stderr : " + stderr
         	if stdout? or error            
                 callback "notrunning"
             else

@@ -82,12 +82,14 @@ systemcheck = ()->
         ],
         (err,result)=>
             log.info "SYSTEMCHECK -  result is  %s ", result
+            console.log "SYSTEMCHECK -  result is  %s ", result
             if err
                 throw new Error "Dependent packages are not available - Failed"
     )         
 
 #
 systemcheck()
+
 
 log.info "starting the REST api services..."
 #---------------------------------------------------------------------------------------#

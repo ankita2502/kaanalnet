@@ -162,6 +162,7 @@ class VmBuilder
     start:(data,callback) ->        
         vmdata = @registry.get data
         return callback new Error "VM details not found in DB" unless vmdata?
+        @configStartup(vmdata)
         vm.startContainer vmdata.data.name, (res) =>
             util.log "startvm" + res
             if res is true
@@ -229,7 +230,19 @@ class VmBuilder
                 netem.setLinkChars i.veth, i.config,(result)=>
                     console.log "setLinkCahrs output " + result
                 callback true
-                        
+
+    configStartup :(vmdata)->
+        util.log "in configStartup routine", JSON.stringify vmdata
+        if vmdata.data.type is "router"
+            util.log 'its router'
+            vm.updateRouterConfig(vmdata.data.ifmap,vmdata.data.name)            
+            vm.updateRouterStartupScript(vmdata.data.name)
+            util.log "its router- to be returned here"
+            return
+        else
+            util.log 'its host'
+            vm.updateHostStartupScript(vmdata.data.name)                        
+            return
     ###
     packettrace:(data, callback)->
         vmdata = @registry.get data
