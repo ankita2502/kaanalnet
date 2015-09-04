@@ -1,0 +1,35 @@
+{
+    "name":"example1_ping_test",
+    "tests":[
+        {
+            "sourcenodes":["a1"],
+            "destnodes":["a2"],
+            "traffictype":"ping",
+            "starttime":"0",
+            "duration":"30",
+            "trafficconfig":
+            {               
+            }
+        },
+        {
+            "sourcenodes":["a1"],
+            "destnodes":["b1"],
+            "traffictype":"ping",
+            "starttime":"0",
+            "duration":"30",
+            "trafficconfig":
+            {               
+            }
+        },
+        {
+            "sourcenodes":["a1"],
+            "destnodes":["b2"],
+            "traffictype":"ping",
+            "starttime":"0",
+            "duration":"30",
+            "trafficconfig":
+            {               
+            }
+        }        
+        ]
+}

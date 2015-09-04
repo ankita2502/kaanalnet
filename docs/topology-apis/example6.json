@@ -1,0 +1,31 @@
+{ 
+  "name":"example6", 
+  "switches":[
+      { "name":"lanswitch1","type":"lan"},      
+      { "name":"lanswitch2","type":"lan"},
+      { "name":"lanswitch3","type":"lan"},
+      { "name":"lanswitch4","type":"lan"},
+      { "name":"lanswitch5","type":"lan"},
+      { "name":"lanswitch6","type":"lan"},
+      { "name":"lanswitch7","type":"lan"}
+  ],  
+  "nodes":[
+    { "name":"a1","type":"host"},
+    { "name":"a2","type":"host"},
+    { "name":"a3","type":"host"},
+    { "name":"a4","type":"host"}
+  ],
+  "links":[
+    {
+      "type":"lan",
+      "switches":[
+      { "name":"lanswitch4","connected_nodes":[{"name":"a1"}],"connected_switches":[{"name":"lanswitch2"}]},
+      { "name":"lanswitch5","connected_nodes":[{"name":"a2"}],"connected_switches":[{"name":"lanswitch2"},{"name":"lanswitch6"},{"name":"lanswitch3"}]},
+      { "name":"lanswitch6","connected_nodes":[{"name":"a3"}],"connected_switches":[{"name":"lanswitch3"}]},
+      { "name":"lanswitch7","connected_nodes":[{"name":"a4"}],"connected_switches":[{"name":"lanswitch3"}]},
+      { "name":"lanswitch2","connected_switches":[{"name":"lanswitch1"},{"name":"lanswitch3"}]},
+      { "name":"lanswitch3","connected_switches":[{"name":"lanswitch1"}]}
+      ]
+    }    
+  ]  
+}

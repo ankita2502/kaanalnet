@@ -1,0 +1,35 @@
+{
+    "name":"example1_tcp_test",
+    "tests":[
+        {
+            "sourcenodes":["a1"],
+            "destnodes":["a2"],
+            "traffictype":"tcp",
+            "starttime":"0",
+            "duration":"30",
+            "trafficconfig":
+            {               
+            }
+        },
+        {
+            "sourcenodes":["a1"],
+            "destnodes":["b1"],
+            "traffictype":"tcp",
+            "starttime":"0",
+            "duration":"30",
+            "trafficconfig":
+            {               
+            }
+        },
+        {
+            "sourcenodes":["a1"],
+            "destnodes":["b2"],
+            "traffictype":"tcp",
+            "starttime":"0",
+            "duration":"30",
+            "trafficconfig":
+            {               
+            }
+        }        
+        ]
+}

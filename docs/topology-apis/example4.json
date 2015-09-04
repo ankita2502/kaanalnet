@@ -1,0 +1,20 @@
+{ 
+  "name":"example4", 
+  "switches":[
+      { "name":"lanswitch1","type":"lan"},      
+      { "name":"lanswitch2","type":"lan"}     
+  ],  
+  "nodes":[
+    { "name":"a1","type":"host"},
+    { "name":"a2","type":"host"}    
+  ],
+  "links":[
+    {
+      "type":"lan",
+      "switches":[
+      { "name":"lanswitch1","connected_nodes":[{"name":"a1"}],"connected_switches":[{"name":"lanswitch2"}]},
+      { "name":"lanswitch2","connected_nodes":[{"name":"a2"}]}
+      ]
+    }    
+  ]  
+}

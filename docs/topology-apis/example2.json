@@ -1,0 +1,59 @@
+{ 
+  "name":"example2", 
+  "switches":[
+      { "name":"lanswitch1","type":"lan"},      
+      { "name":"lanswitch2","type":"lan"},
+      { "name":"wanswitch1","type":"wan"},
+      { "name":"wanswitch2","type":"wan"},
+      { "name":"wanswitch3","type":"wan"},
+      { "name":"wanswitch4","type":"wan"}
+  ],  
+  "nodes":[
+    { "name":"a1","type":"host"},
+    { "name":"a2","type":"host"},
+    { "name":"r1","type":"router"},
+    { "name":"r2","type":"router"},
+    { "name":"r3","type":"router"},
+    { "name":"r4","type":"router"},
+    { "name":"b1","type":"host"},
+    { "name":"b2","type":"host"}
+  ],
+  "links":[
+    {
+      "type":"lan",
+      "switches":[
+      { "name":"lanswitch1","connected_nodes":[{"name":"r1"},{"name":"a1"},{"name":"a2"}]}
+      ]
+    },
+    {
+      "type":"lan",
+      "switches":[
+      { "name":"lanswitch2","connected_nodes":[{"name":"r4"},{"name":"b1"},{"name":"b2"}]} 
+      ]
+    },
+    {
+      "type":"wan",      
+      "switches":[
+      {"name":"wanswitch1","connected_nodes":[{"name":"r1"},{"name":"r2"}]}
+      ]
+    },
+    {
+      "type":"wan",      
+      "switches":[
+      {"name":"wanswitch2","connected_nodes":[{"name":"r1"},{"name":"r3"}]}
+      ]
+    },
+    {
+      "type":"wan",      
+      "switches":[
+      {"name":"wanswitch3","connected_nodes":[{"name":"r2"},{"name":"r4"}]}
+      ]
+    },
+    {
+      "type":"wan",      
+      "switches":[
+      {"name":"wanswitch4","connected_nodes":[{"name":"r3"},{"name":"r4"}]}
+      ]
+    }
+  ]  
+}

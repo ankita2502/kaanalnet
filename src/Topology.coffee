@@ -457,7 +457,9 @@ class Topology
             log.info "Topology - creating the switches "
             for sw in @config.switches   
                 sw.make = @sysconfig.switchtype
-                sw.controller = @sysconfig.controller if @sysconfig.controller?
+                #sw.ports = 2
+                unless sw.type is "wan"
+                    sw.controller = @sysconfig.controller if @sysconfig.controller?
                 log.info "Topology - creating a new switch  " + JSON.stringify sw
                 obj = new switches(sw)
                 @switchobj.push obj
@@ -492,19 +494,20 @@ class Topology
             swobj = @getSwitchObjbyName(sw.name)
             if swobj is null
                 assert "switch object #{sw.name} is not present in switch object array...something went wrong."
-                  
-            for n in  sw.connected_nodes
-                log.info "Topology - iterating the connected_nodes in the switch #{sw.name} " + JSON.stringify n
-                obj = @getNodeObjbyName(n.name)
-                if obj is null
-                    assert "node object #{n.name} is not present in node object array...something went wrong."
-                if obj?                            
-                    startaddress = temp.iparray[x++]                        
-                    log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                    obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], n.config)
-                    log.info "Topology - #{obj.config.name} added the Lan interface" 
+            if sw.connected_nodes?
+                for n in  sw.connected_nodes
+                    log.info "Topology - iterating the connected_nodes in the switch #{sw.name} " + JSON.stringify n
+                    obj = @getNodeObjbyName(n.name)
+                    if obj is null
+                        assert "node object #{n.name} is not present in node object array...something went wrong."
+                    if obj?                            
+                        startaddress = temp.iparray[x++]                        
+                        log.info "Topology -  #{obj.config.name} Lan address " + startaddress
+                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], n.config)
+                        log.info "Topology - #{obj.config.name} added the Lan interface" 
         
     buildInterSwitchLink:(val)->
+        index = 0
         log.info "Topology - building  a Interswitch link " +  JSON.stringify val
         for sw in val.switches
             #switch object
@@ -517,40 +520,46 @@ class Topology
                 for n in  sw.connected_switches 
                     obj = @getSwitchObjbyName(n.name)
                     if obj?                            
-                        srctaplink = "#{sw.name}_#{n.name}"
-                        dsttaplink = "#{n.name}_#{sw.name}"                                                        
+                        srctaplink = "#{sw.name}_t#{index}"
+                        dsttaplink = "#{n.name}_t#{index}"                                                        
                         #swobj.createTapInterfaces srctaplink,dsttaplink
                         exec = require('child_process').exec
                         command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
+                        log.info "Topology - interswitch link creation command - #{command}" 
                         exec command, (error, stdout, stderr) =>
 
                         #console.log "createTapinterfaces completed", result
                         swobj.addTapInterface(srctaplink,n.config)
                         obj.addTapInterface(dsttaplink,null)
-                        
+                        index++
 
     buildWanLink:(val)->
         x = 0
         log.info "Topology - building  a WAN link " +  JSON.stringify val
         temp = @ipmgr.getFreeWanSubnet()
         #swname = "#{val.type}_#{val.connected_nodes[0].name}_#{val.connected_nodes[1].name}"
-        swname = "#{val.type}_sw#{sindex}"
-        sindex++
-        log.debug "  wan swname is "+ swname
-        obj = new switches
-            name : swname
-            ports: 2
-            type : val.type
-            make : @sysconfig.switchtype
-            controller : @sysconfig.controller if @sysconfig.controller?
-        @switchobj.push obj
-        
-        for n in  val.connected_nodes
+        #swname = "#{val.type}_sw#{sindex}"
+        #sindex++
+        #log.debug "  wan swname is "+ swname
+        #obj = new switches
+        #    name : swname
+        #    ports: 2
+        #    type : val.type
+        #    make : @sysconfig.switchtype
+        #    controller : @sysconfig.controller if @sysconfig.controller?
+        #@switchobj.push obj
+        sw = val.switches[0]
+        swobj = @getSwitchObjbyName(sw.name)
+        if swobj is null
+            assert "switch object #{sw.name} is not present in switch object array...something went wrong."
+          
+        for n in  sw.connected_nodes
+        #for n in  val.connected_nodes
             log.info "updating wan interface for ", n.name
             obj = @getNodeObjbyName(n.name)
             if obj?
                 startaddress = temp.iparray[x++]
-                obj.addWanInterface(swname, startaddress, temp.subnetMask, null, n.config)
+                obj.addWanInterface(sw.name, startaddress, temp.subnetMask, null, n.config)
 
     buildLinks:()->       
         log.info "processing the input data links array to build links " + JSON.stringify @config.links
