@@ -9,9 +9,9 @@ Schema =
     required: true
     properties:        
         bandwidth:  {"type":"string", "required":true}
-        latency:  {"type":"string", "required":false}
-        jitter:  {"type":"string", "required":false}
-        pktloss:  {"type":"string", "required":false}
+        latency:  {"type":"string", "required":true}
+        jitter:  {"type":"string", "required":true}
+        pktloss:  {"type":"string", "required":true}
 
 
 class IPRoute2	

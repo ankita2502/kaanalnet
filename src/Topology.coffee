@@ -88,8 +88,8 @@ class TestData extends StormData
                                 type: "string"
                                 required: true
                         traffictype: {type:"string", required:true}            
-                        starttime:  {type:"string", required:true}    
-                        duration:  {type:"string", required:true}                           
+                        starttime:  {type:"number", required:false}    
+                        duration:  {type:"number", required:true}                           
                         trafficconfig:
                             type: "object"
                             required: true

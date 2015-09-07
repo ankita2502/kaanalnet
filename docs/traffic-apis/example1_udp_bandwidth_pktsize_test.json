@@ -1,34 +1,40 @@
 {
-    "name":"example1_ping_test",
+    "name":"example1_udp_test",
     "tests":[
         {
             "sourcenodes":["a1"],
             "destnodes":["a2"],
-            "traffictype":"ping",
+            "traffictype":"udp",
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {
+            "bandwidth":"2Mb",
+            "packetsize":100
             }
         },
         {
             "sourcenodes":["a1"],
             "destnodes":["b1"],
-            "traffictype":"ping",
+            "traffictype":"udp",
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {     
+            "bandwidth":"10Mb",
+            "packetsize":1400          
             }
         },
         {
             "sourcenodes":["a1"],
             "destnodes":["b2"],
-            "traffictype":"ping",
+            "traffictype":"udp",
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {             
+            "bandwidth":"500Kb",
+            "packetsize":1400  
             }
         }        
         ]

@@ -1,7 +1,7 @@
 { 
   "name":"example1", 
   "switches":[
-      { "name":"lanswitch1","type":"lan"},
+      { "name":"lanswitch1","type":"lan"},      
       { "name":"lanswitch2","type":"lan"},
       { "name":"wanswitch1","type":"wan"}
 

@@ -1,34 +1,40 @@
 {
-    "name":"example1_ping_test",
+    "name":"example1_tcp_test",
     "tests":[
         {
             "sourcenodes":["a1"],
             "destnodes":["a2"],
-            "traffictype":"ping",
+            "traffictype":"tcp",
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {
+            "windowsize":128,
+            "packetsize":100
             }
         },
         {
             "sourcenodes":["a1"],
             "destnodes":["b1"],
-            "traffictype":"ping",
+            "traffictype":"tcp",
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {   
+            "windowsize":128,
+            "packetsize":100            
             }
         },
         {
             "sourcenodes":["a1"],
             "destnodes":["b2"],
-            "traffictype":"ping",
+            "traffictype":"tcp",
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {     
+            "windowsize":128,
+            "packetsize":100          
             }
         }        
         ]

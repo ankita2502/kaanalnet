@@ -1,5 +1,5 @@
 {
-    "name":"example1_ping_test",
+    "name":"example1_floodping_test",
     "tests":[
         {
             "sourcenodes":["a1"],
@@ -8,7 +8,9 @@
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {
+            "flood":"yes",
+            "count":1000
             }
         },
         {
@@ -18,7 +20,9 @@
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            {    
+            "flood":"yes",
+            "count":1000         
             }
         },
         {
@@ -28,7 +32,9 @@
             "starttime":0,
             "duration":30,
             "trafficconfig":
-            {               
+            { 
+            "flood":"yes",
+            "count":1000
             }
         }        
         ]
