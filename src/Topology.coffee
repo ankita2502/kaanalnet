@@ -673,7 +673,7 @@ class Topology
 
         for t in testdata.data.tests
             srcnode = @getNodeObjbyName(t.sourcenodes[0])
-            sourcenodeip = srcnode.lanip
+            sourcenodeip = srcnode.mgmtip
             destnode = @getNodeObjbyName(t.destnodes[0])
             destnodeip = destnode.lanip 
 

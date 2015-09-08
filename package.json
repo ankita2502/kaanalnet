@@ -1,7 +1,7 @@
 {
 	"name": "kaanalnet",
 	"description": "Virtual Network Emulator Lab for SDN and traditional networks ",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"author": "Suresh Kumar",	
 	"repository": {
 		"type": "git",
