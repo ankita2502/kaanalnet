@@ -1,7 +1,7 @@
 {
 	"name": "kaanalnet",
 	"description": "Virtual Network Emulator Lab for SDN and traditional networks ",
-	"version": "0.0.5",
+	"version": "0.0.7",
 	"author": "Suresh Kumar",	
 	"repository": {
 		"type": "git",
@@ -27,10 +27,11 @@
 		"debianpackages":["lxc","bridge-utils","openvswitch-switch"]	
 	},
 	"main": "./lib/app",
+	"license": "MIT",
+	"homepage": "http://kaanalnet.org",
 	"scripts": {		
-		"start": "nodejs lib/app.js",		
-		"preinstall": "nodejs scripts/preinstall.js",
-		"postinstall": "nodejs scripts/postinstall.js"
+		"start": "nodejs lib/app.js",
+		"installcontainer": "nodejs scripts/installcontainer.js"
 	},
 	"contributors": [
 		""	

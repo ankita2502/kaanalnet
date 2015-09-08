@@ -94,7 +94,7 @@ class LXCControl
 
 	updateHostStartupScript: (containerName)->
 		filename= "/var/lib/lxc/#{containerName}/rootfs/etc/init.d/rc.local"
-		agentcmd = "\nnodejs /home/ubuntu/testagent/lib/app.js > /var/log/testagent.log & \n"
+		agentcmd = "\nnodejs /node_modules/testagent/lib/app.js > /var/log/testagent.log & \n"
 		iperf1 = "iperf -s > /var/log/iperf_tcp_server.log & \n"
 		iperf2 = "iperf -s -u > /var/log/iperf_udp_server.log & \n"
 		fs.appendFileSync(filename,agentcmd)
@@ -121,8 +121,8 @@ class LXCControl
 	updateRouterStartupScript : (containerName)->
 		util.log "in updateRouterStartupScript "
 		filename= "/var/lib/lxc/#{containerName}/rootfs/etc/init.d/rc.local"
-		zebracmd = "\nzebra -f /etc/zebra.conf -d & \n"
-		ospfcmd = "ospfd -f /etc/ospf.conf -d & \n"
+		zebracmd = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n"
+		ospfcmd = "/usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
 		util.log "zebracmd " + zebracmd
 		util.log "ospfdcmd " + ospfcmd
 		fs.appendFileSync(filename,zebracmd)
