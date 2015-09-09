@@ -8,7 +8,7 @@ console.log "template is ", templatepath
 InstallLXCBaseContainer = (cb)->
 	#lxc-create -t ubuntu -n node -- -r trusty
 	#command = "lxc-create -t ubuntu -n nodeimg -- -r trusty"
-	command = "lxc-create -t #{templatepath} -n nodeimg -- -r trusty"	
+	command = "lxc-create -t #{templatepath} -n nodeimg "	
 	console.log "executing #{command}..."        
 	exec command, (error, stdout, stderr) =>
 		console.log "installing LXC Base container - Error : " + error

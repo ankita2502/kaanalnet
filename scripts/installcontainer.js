@@ -14,7 +14,7 @@
 
   InstallLXCBaseContainer = function(cb) {
     var command;
-    command = "lxc-create -t " + templatepath + " -n nodeimg -- -r trusty";
+    command = "lxc-create -t " + templatepath + " -n nodeimg ";
     console.log("executing " + command + "...");
     return exec(command, (function(_this) {
       return function(error, stdout, stderr) {

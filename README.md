@@ -17,11 +17,15 @@ KaanalNet creates a Virtual Network Lab on your Laptop or Desktop or Cloud. It c
 KaanalNet uses the Linux Containers (LXC), openvswitch, linux bridge and ping,iperf(traffic utilities). 
 KaanalNet is tested with  OpenDayLight and POX SDN controller.
 
+
+*Current release is a Beta Release.*
+
+*It has been tested on only **UBUNTU 14.04** version.*     
+
+**Support is available on kaanalnet-discuss@freelists.org**
+
+
 The Detailed Documentaion is available in Github WiKi.        
 
 https://github.com/sureshkvl/kaanalnet/wiki       
-
-
-
-
 
