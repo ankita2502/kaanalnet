@@ -14,7 +14,7 @@ log.info "IPManager - Logger test message"
 # revisit later.
 
 # utility functions
-subnetting = (net, curprefix, newprefix ) ->
+wansubnetting = (net, curprefix, newprefix ) ->
     
     netmask = ip.fromPrefixLen(curprefix)
     newmask = ip.fromPrefixLen(newprefix)
@@ -52,12 +52,40 @@ iplist = (address) ->
         xx[3]++ 
     return iparray
 
+lanipsubnets = (address)->
+
+    netmask = '255.255.255.0'
+    net = address
+    iterations = 255
+    xx = new Buffer 4
+    answer = []
+    do () ->
+        for i in [0..iterations-1]
+            result = ip.subnet(net,netmask)            
+            result.status = "free"
+            result.iparray = []
+
+            xx = ip.toBuffer(result.firstAddress)
+            for i in [0..result.numHosts-1]                               
+                result.iparray[i] = ip.toString(xx)
+                xx[3]++ 
+
+            answer.push result
+
+            xx = ip.toBuffer(net)
+            xx[2]++     
+            net = ip.toString(xx)
+    return answer 
+
+
+
+
 ##########################################################################################################
 class IPManager
     constructor :(wan,lan,mgmt) ->
         log.info "IPManager starts with wan pool #{wan} lan pool #{lan} mgmt pool #{mgmt}"        
-        @wansubnets = subnetting wan, 24, 30
-        @lansubnets = subnetting lan, 24, 27
+        @wansubnets = wansubnetting wan, 24, 30
+        @lansubnets = lanipsubnets lan
         @wanindex = 0
         @lanindex = 0
         @mgmtindex = 1
@@ -76,3 +104,9 @@ class IPManager
 
 ###################################################################################################
 module.exports = IPManager
+
+
+#Test code
+#lansubnets = subnetting "192.168.1.0"\
+#result = lanipsubnets("10.10.10.1")
+#console.log result;

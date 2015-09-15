@@ -2,7 +2,7 @@ util = require('util')
 request = require('request-json');
 extend = require('util')._extend
 switchctrl = require('./builder/switchCtrl')
-
+async = require 'async'
 log = require('./utils/logger').getLogger()
 log.info "Switches Logger test message"
 
@@ -17,6 +17,7 @@ class switches
         @statistics = {}
         @tapifs = []
         log.info "Switches - constructor -  new switch object created " + JSON.stringify @config
+        @tapindex = 0
         
     create: (callback)->
         log.info "Switches -  creating a switch with config " + JSON.stringify @config
@@ -39,6 +40,7 @@ class switches
     get:()->
         "uuid":@uuid
         "config":@config
+        "tapifs": @tapifs
         #"status":@status
         #"statistics":@statistics
     stop:(callback)->
@@ -86,12 +88,17 @@ class switches
 
     connectTapInterfaces:(callback)->
         log.info "Switches - connectTapInterfaces ...connecting the inter switch links"
-        for tapif in @tapifs
-            #Async model to be introduced
+        async.eachSeries @tapifs, (tapif,callback) =>
             log.info "connectTapInterfaces   " + JSON.stringify tapif
-            @connect tapif.name,(result)=>                
-                callback result
-        callback
+            @connect tapif.name,(result)=>                                
+                callback()
+        ,(err) =>
+            if err
+                log.error "connectTapInterfaces switches error occured " +  JSON.stringify err
+                return callback false
+            else
+                log.info "connectTapInterfaces Switches all are processed "
+                return callback true
 
     setLinkChars : (callback)->
         log.info "Switches: setting the link characterstics " + @config.name

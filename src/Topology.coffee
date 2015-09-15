@@ -484,7 +484,7 @@ class Topology
 
 
     buildLanLink: (val)->
-        x = 0
+        x = 1
         log.info "Topology - building  a LAN link " +  JSON.stringify val
         temp = @ipmgr.getFreeLanSubnet()  
         log.info "Topology - Lan Free subnet is " + JSON.stringify temp
@@ -501,9 +501,12 @@ class Topology
                     if obj is null
                         assert "node object #{n.name} is not present in node object array...something went wrong."
                     if obj?                            
-                        startaddress = temp.iparray[x++]                        
+                        if obj.config.type is "router"
+                            startaddress = temp.firstAddress
+                        else
+                            startaddress = temp.iparray[x++]  
                         log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.iparray[0], n.config)
+                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config)
                         log.info "Topology - #{obj.config.name} added the Lan interface" 
         
     buildInterSwitchLink:(val)->
@@ -519,9 +522,10 @@ class Topology
             if sw.connected_switches?
                 for n in  sw.connected_switches 
                     obj = @getSwitchObjbyName(n.name)
-                    if obj?                            
-                        srctaplink = "#{sw.name}_t#{index}"
-                        dsttaplink = "#{n.name}_t#{index}"                                                        
+                    if obj?                         
+
+                        srctaplink = "#{sw.name}_t#{swobj.tapindex}"
+                        dsttaplink = "#{n.name}_t#{obj.tapindex}"                                                        
                         #swobj.createTapInterfaces srctaplink,dsttaplink
                         exec = require('child_process').exec
                         command = "ip link add #{srctaplink} type veth peer name #{dsttaplink}"
@@ -531,7 +535,9 @@ class Topology
                         #console.log "createTapinterfaces completed", result
                         swobj.addTapInterface(srctaplink,n.config)
                         obj.addTapInterface(dsttaplink,null)
-                        index++
+                        #incrementing the tap index for next interswitch links
+                        swobj.tapindex++
+                        obj.tapindex++
 
     buildWanLink:(val)->
         x = 0
