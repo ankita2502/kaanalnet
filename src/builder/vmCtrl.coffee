@@ -1,6 +1,7 @@
 StormData = require('stormdata')
 StormRegistry = require('stormregistry')
-vm = require('./lxcdriver')
+#vm = require('./lxcdriver')
+Vm = require('lxcdriver')
 util = require('util')
 netem = require('./iproute2driver')
 #===============================================================================================#
@@ -73,6 +74,144 @@ class VmData extends StormData
         super id, data, Schema
 
 #===============================================================================================#
+class VmBuilder    
+    constructor: () ->      
+        @registry = new VmRegistry #"/tmp/vm.db"
+        @vmobjs = {}
+    list : (callback) ->
+        callback @registry.list()
+
+    get: (data, callback) ->        
+        callback @registry.get data
+
+    create: (data,callback) ->
+        try         
+            vmdata = new VmData(null, data )
+        catch err
+            util.log "invalid schema" + err
+            return callback new Error "Invalid Input "
+        finally 
+            vmdata.data.status = "creation-in-progress"
+            @registry.add vmdata        
+            
+            vmobj = new Vm vmdata.data.name
+            
+            callback 
+                "id": vmdata.id
+                "status": vmobj.state
+            
+            vmobj.clone vmdata.data.image,(result)=>
+                util.log "clone vm " + result
+                if result instanceof Error
+                    vmdata.data.status = vmobj.state #"failed"
+                    vmdata.data.reason = "VM already exists"
+                    @registry.update vmdata.id, vmdata.data
+                    return 
+                util.log "state is " + vmobj.state
+                #remove the interface file
+                vmobj.deleteFile "/etc/network/interfaces"
+
+                #processing the interfaces map
+                if vmdata.data.ifmap?
+                    for x in vmdata.data.ifmap                      
+                        if x.type is "mgmt"
+                            #ubuntu interfaces file format
+                            text = "\nauto #{x.ifname}\niface #{x.ifname} inet static \n\t address #{x.ipaddress} \n\t netmask #{x.netmask} \n"
+                            vmobj.appendFile("/etc/network/interfaces",text)
+    
+                        else # for wan, lan interfaces                                    
+                            vmobj.addEthernetInterface(x.veth,x.hwAddress)
+                            text = "\nauto #{x.ifname}\niface #{x.ifname} inet static \n\t address #{x.ipaddress} \n\t netmask #{x.netmask} \n\t gateway #{x.gateway}\n"
+                            vmobj.appendFile("/etc/network/interfaces",text)    
+                        #write in to db
+                vmdata.data.id = vmdata.id
+                vmdata.data.status = vmobj.state #"created"                                
+                @registry.update vmdata.id, vmdata.data
+                @vmobjs[vmdata.id] = vmobj
+                return 
+
+    start:(id,callback) ->        
+        vmdata = @registry.get id
+        util.log "start ", vmdata
+        return callback new Error "VM details not found in DB" unless vmdata?
+        vmobj = @vmobjs[id]
+        #@configStartup(vmdata)
+        return callback new Error "vm obj not found" unless vmobj?
+
+
+        vmobj.start (res) =>
+            util.log "startvm" + res
+            if res is true
+                vmdata.data.status = vmobj.state
+                @registry.update vmdata.id, vmdata.data
+                return callback 
+                    "id": vmdata.id
+                    "status":vmdata.data.status
+            else
+                vmdata.data.status = "failed"
+                vmddata.data.reason = "failed to start"   
+                @registry.update vmdata.id, vmdata.data
+                return callback 
+                        "id": vmdata.id
+                        "status":vmdata.data.status
+                        "reason": vmdata.data.reason
+
+    stop:(id,callback) ->
+        vmdata = @registry.get id
+        return callback new Error "VM details not found in DB" unless vmdata?
+        vmobj = @vmobjs[id]
+        vmobj.stop (result) =>
+            util.log "stopvm" + result
+            if result is true
+                vmdata.data.status = vmobj.state #"stopped"   
+                @registry.update vmdata.id, vmdata.data
+                return callback  
+                    "id":vmdata.id
+                    "status":vmdata.data.status
+            else
+                vmdata.data.status = "failed"
+                vmdata.data.reason = "failed to stop"   
+                @registry.update vmdata.id, vmdata.data
+                return callback 
+                    "id":vmdata.id
+                    "status":vmdata.data.status
+                    "reason" : vmdata.data.reason
+    del:(id,callback)->
+        vmdata = @registry.get id
+        return callback new Error "VM details not found in DB" unless vmdata?
+        vmobj = @vmobjs[id]
+
+        vmobj.stop (res) =>
+            vmobj.destroy (result) =>
+                util.log "deleteVM " + result
+                if result is true
+                    vmdata.data.status = vmobj.state   
+                    @registry.remove vmdata.id
+                    #delete @vmobjs[id]
+                    return callback 
+                        "id":vmdata.id
+                        "status":vmdata.data.status
+                else
+                    vmdata.data.status = "failed"
+                    vmddata.data.reason = "failed to stop"   
+                    @registry.update vmdata.id, vmdata.data
+                    return callback 
+                        "id":vmdata.id
+                        "status":VmDataa.data.status
+                        "reason":vmdata.data.reason
+    status:(data,callback) ->
+        vmdata = @registry.get data
+        return callback new Error "VM details not found in DB" unless vmdata?
+        vmobj = @vmobjs[id]
+        vmobj.runningstatus (res)=>
+            util.log "statusvm" + res           
+            vmdata.data.status = res  
+            @registry.update vmdata.id, vmdata.data
+            return callback 
+                "id": vmdata.id
+                "status":vmdata.data.status  
+
+###
 class VmBuilder
     @records = []
     constructor: () ->		
@@ -103,6 +242,7 @@ class VmBuilder
                 "status":vmdata.data.status          
             #Delete the VM if already in the same name exists
             console.log "stopcontainer", vmdata.data.name
+
             vm.stopContainer vmdata.data.name, (result) =>
                 #Need to check the result?
                 vm.destroyContainer vmdata.data.name, (result) =>
@@ -243,7 +383,8 @@ class VmBuilder
             util.log 'its host'
             vm.updateHostStartupScript(vmdata.data.name)                        
             return
-    ###
+###
+###
     packettrace:(data, callback)->
         vmdata = @registry.get data
         return callback new Error "VM details not found in DB" unless vmdata?
@@ -270,5 +411,7 @@ class VmBuilder
             return callback        
                 "id":vmdata.id
                 "status":"Packet Trace enabled"                
-    ###
+###
+
+
 module.exports = new VmBuilder

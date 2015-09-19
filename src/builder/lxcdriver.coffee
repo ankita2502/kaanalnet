@@ -1,3 +1,4 @@
+###
 util = require 'util'
 exec = require('child_process').exec
 fs = require('fs')
@@ -130,3 +131,4 @@ class LXCControl
 		return
 
 module.exports = new LXCControl
+###

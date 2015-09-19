@@ -44,6 +44,16 @@ systemcheck = ()->
     async.series([
         (callback)=>
             log.info "SYSTEMCHECK : Checking the LXC..."            
+            lxc = require('lxcdriver')
+            container = new lxc config.lxcimage
+            container.exists (result)=>
+                if result is true
+                    log.info "SYSTEMCHECK: LXC Image < #{config.lxcimage} > present in the system.. PASSED "
+                    callback(null,"LXC Check success") 
+                else    
+                    log.error "SYSTEMCHECK: LXC Image <#{config.lxcimage}> NOT present in the system.. FAILED"                    
+                    callback new Error ('LXC Check failed') 
+            ###
             lxcdriver = require('./builder/lxcdriver')
             lxcdriver.checkContainerExistence config.lxcimage,(result)=>
                 if result is "available"
@@ -52,6 +62,7 @@ systemcheck = ()->
                 else    
                     log.error "SYSTEMCHECK: LXC Image <#{config.lxcimage}> NOT present in the system.. FAILED"                    
                     callback new Error ('LXC Check failed') 
+            ###
         ,
         (callback)=>
             log.info "SYSTEMCHECK : Checking the Linux bridge..."  
