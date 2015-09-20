@@ -135,7 +135,7 @@ class VmBuilder
         util.log "start ", vmdata
         return callback new Error "VM details not found in DB" unless vmdata?
         vmobj = @vmobjs[id]
-        #@configStartup(vmdata)
+        @configStartup(vmdata)
         return callback new Error "vm obj not found" unless vmobj?
 
 
@@ -199,8 +199,8 @@ class VmBuilder
                         "id":vmdata.id
                         "status":VmDataa.data.status
                         "reason":vmdata.data.reason
-    status:(data,callback) ->
-        vmdata = @registry.get data
+    status:(id,callback) ->
+        vmdata = @registry.get id
         return callback new Error "VM details not found in DB" unless vmdata?
         vmobj = @vmobjs[id]
         vmobj.runningstatus (res)=>
@@ -210,6 +210,53 @@ class VmBuilder
             return callback 
                 "id": vmdata.id
                 "status":vmdata.data.status  
+
+    setLinkChars : (id,callback)->
+        vmdata = @registry.get id
+        return callback new Error "VM details not found in DB" unless vmdata?
+        for i in vmdata.data.ifmap            
+            util.log "Vmctrl - setLinkChars " + JSON.stringify i
+            if i.config?
+                netem.setLinkChars i.veth, i.config,(result)=>
+                    console.log "setLinkCahrs output " + result
+                callback true
+
+
+
+    configStartup :(vmdata)->
+        util.log "in configStartup routine", JSON.stringify vmdata
+        vmobj = @vmobjs[vmdata.id]        
+        if vmdata.data.type is "router"
+            util.log 'its router'
+
+            #updating the zebra config file
+            zebraconf = "hostname zebra \npassword zebra \nenable password zebra \n"
+            for i in vmdata.data.ifmap
+                zebraconf += "interface  #{i.ifname} \n"            
+                zebraconf += "   ip address #{i.ipaddress}/30 \n" if i.type is "wan"
+                zebraconf += "   ip address #{i.ipaddress}/27 \n" if i.type is "lan"
+                zebraconf += "   ip address #{i.ipaddress}/24 \n" if i.type is "mgmt"       
+            util.log "zebrafile " +  zebraconf            
+            vmobj.appendFile("/etc/zebra.conf",zebraconf)
+
+            #ospf config
+            ospfconf = "hostname ospf \npassword zebra \nenable password zebra \nrouter ospf\n  "
+            for i in vmdata.data.ifmap
+                ospfconf += "   network #{i.ipaddress}/24 area 0 \n" unless i.type is "mgmt"
+            util.log "ospfconffile " + ospfconf
+            vmobj.appendFile("/etc/ospf.conf",ospfconf)
+            
+            #updating the startup script
+            text = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n /usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
+            vmobj.appendFile("/etc/init.d/rc.local",text)            
+            util.log "its router- to be returned here"
+            return
+        else
+            util.log 'its host'
+            #updating the startup script
+            text = "\nnodejs /node_modules/testagent/lib/app.js > /var/log/testagent.log & \n  iperf -s > /var/log/iperf_tcp_server.log & \n iperf -s -u > /var/log/iperf_udp_server.log & \n"
+            vmobj.appendFile("/etc/init.d/rc.local",text)
+            return
 
 ###
 class VmBuilder
