@@ -1,5 +1,5 @@
-brctl = require('./brctldriver')
-ovs= require('./ovsdriver')
+brctl = require('brctldriver')
+ovs = require('ovsdriver')
 util = require('util')
 netem = require('./iproute2driver')
 StormData = require('stormdata')

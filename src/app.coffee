@@ -53,20 +53,10 @@ systemcheck = ()->
                 else    
                     log.error "SYSTEMCHECK: LXC Image <#{config.lxcimage}> NOT present in the system.. FAILED"                    
                     callback new Error ('LXC Check failed') 
-            ###
-            lxcdriver = require('./builder/lxcdriver')
-            lxcdriver.checkContainerExistence config.lxcimage,(result)=>
-                if result is "available"
-                    log.info "SYSTEMCHECK: LXC Image < #{config.lxcimage} > present in the system.. PASSED "
-                    callback(null,"LXC Check success") 
-                else    
-                    log.error "SYSTEMCHECK: LXC Image <#{config.lxcimage}> NOT present in the system.. FAILED"                    
-                    callback new Error ('LXC Check failed') 
-            ###
         ,
         (callback)=>
             log.info "SYSTEMCHECK : Checking the Linux bridge..."  
-            brctl = require('./builder/brctldriver')
+            brctl = require('brctldriver')
             testbridge = "testbridge"
             brctl.createBridge testbridge,(result)=>  
                 if result is true
@@ -79,7 +69,7 @@ systemcheck = ()->
         ,
         (callback)=>
             log.info "SYSTEMCHECK : Checking the OpenVSwitch..."  
-            ovs = require('./builder/ovsdriver')
+            ovs = require('ovsdriver')
             testbridge = "testbridge"
             ovs.createBridge testbridge,(result)=>  
                 if result is true
