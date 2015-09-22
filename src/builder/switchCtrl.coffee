@@ -48,6 +48,7 @@ class SwitchData extends StormData
             type:{ type: "string", required: true}
             make: { type: "string", required: false}           	
             controller: { type: "string", required: false}
+            ofversion: { type: "number", required: false}
             
     constructor: (id, data) ->
         super id, data, Schema
@@ -136,6 +137,8 @@ class SwitchBuilder
 			if sdata.data.controller?
 				bridge.setController sdata.data.name, sdata.data.controller, (result) =>
 					util.log result
+					bridge.setOFVersion sdata.data.name, sdata.data.ofversion, (res) =>
+						util.log res
 		else
 			bridge  = brctl
 

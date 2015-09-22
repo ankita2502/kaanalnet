@@ -15,6 +15,7 @@ if argv.h?
         -L Lan subnet (default - 10.10.10.0)
         -M Mgmt subnet (default - 10.0.3.0)
         -I Lxc image name (default: "nodeimg")  
+        -O openflow version (1.0 or 1.1 or 1.2 or 1.3  default: null)
     """
     return
 
@@ -28,6 +29,7 @@ config =
     lansubnet : argv.L  ? '10.10.10.0'
     mgmtsubnet : argv.M ? '10.0.3.0'
     lxcimage : argv.I ? 'nodeimg'
+    ofversion: if argv.O in [ 1.0,1.1,1.2,1.3 ] then argv.O else null   
 
 #console.log config
 

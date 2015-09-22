@@ -457,6 +457,7 @@ class Topology
             log.info "Topology - creating the switches "
             for sw in @config.switches   
                 sw.make = @sysconfig.switchtype
+                sw.ofversion = @sysconfig.ofversion
                 #sw.ports = 2
                 unless sw.type is "wan"
                     sw.controller = @sysconfig.controller if @sysconfig.controller?
