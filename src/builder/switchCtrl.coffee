@@ -102,12 +102,15 @@ class SwitchBuilder
 		# if switch make is "ovs"
 	addInterface : (data, body, callback) ->
 		util.log "addInterface body is "+ JSON.stringify body
+		util.log "addInterface data is "+ data
 		sdata = @registry.get data
+		util.log "addInterface sdata is "+ JSON.stringify sdata
 		return callback new Error "Switch details not found in DB" unless sdata?
 		if sdata.data.make is "openvswitch"
 			bridge  = ovs
 		else
 			bridge  = brctl
+
 
 		bridge.addInterface sdata.data.name, body.ifname, (result) =>
 			util.log "addif" + result			

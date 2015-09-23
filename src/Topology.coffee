@@ -204,7 +204,7 @@ class Topology
     # To be converted in to Hash model.
     getNodeObjbyName:(name) ->
         log.debug "getNodeObjbyName - input " + name
-        retun null unless name?
+        return null unless name?
         for obj in @nodeobj
             log.debug "getNodeObjbyName - checking with " + obj.config.name
             if obj.config.name is name
@@ -215,7 +215,7 @@ class Topology
 
     getSwitchObjbyName:(name) ->
         log.debug "getSwitchObjbyName input  " + name
-        retun null unless name?
+        return null unless name?
         for obj in @switchobj
             log.debug "getSwitchObjbyName iteraition from the objectarray " + obj.config.name
             if obj.config.name is name
@@ -671,31 +671,58 @@ class Topology
             switchstatus.push n.get()
         #"config" : @config        
         "nodes" : nodestatus
-        "switches":  switchstatus    
+        "switches":  switchstatus
+
+    createTest :(testdataid,t,sourcenode,destnode)->
+        log.info "CreateTest  sourcenode #{sourcenode}  #{destnode}"
+        log.info "CreateTest testdataid ", testdataid
+        log.info "CreateTest t t ", t
+        srcnode = @getNodeObjbyName(sourcenode)
+        sourcenodeip = srcnode.mgmtip
+        dnode = @getNodeObjbyName(destnode)
+        destnodeip = dnode.lanip 
+
+        testData =
+            "testsuiteid": testdataid
+            "name" : "test_#{t.traffictype}_#{sourcenode}_#{destnode}"
+            "source" : sourcenodeip
+            "destination" : destnodeip
+            "type": t.traffictype
+            "starttime": t.starttime
+            "duration": t.duration
+            "config": t.trafficconfig
+        testobj = new test(testData)
+        testobj.run()
+        @testobjs.push testobj     
+
 
     #Test specific functions
-    createTest :(testdata)->
+    createTestSuite :(testdata)->
         #can be converted in to async model
-        console.log "createTest called with " + JSON.stringify testdata
+        log.info "createTest called with " + JSON.stringify testdata
 
         for t in testdata.data.tests
-            srcnode = @getNodeObjbyName(t.sourcenodes[0])
-            sourcenodeip = srcnode.mgmtip
-            destnode = @getNodeObjbyName(t.destnodes[0])
-            destnodeip = destnode.lanip 
+            #relationship 
+            log.info  "test sourcenodes length" , t.sourcenodes.length
+            log.info  "test destnodes length " , t.destnodes.length
 
-            testData =
-                "testsuiteid": testdata.id
-                "name" : "test_#{sourcenodeip}_#{destnodeip}"
-                "source" : sourcenodeip
-                "destination" : destnodeip
-                "type": t.traffictype
-                "starttime": t.starttime
-                "duration": t.duration
-                "config": t.trafficconfig
-            testobj = new test(testData)
-            testobj.run()
-            @testobjs.push testobj     
+            #one to many relationship
+            if t.sourcenodes.length is 1 and t.destnodes.length > 1
+                log.info "one to many relationship"
+                @createTest(testdata.id, t, t.sourcenodes[0], i)  for i in t.destnodes 
+            #many to one relationship
+            else if t.destnodes.length is 1 and t.sourcenodes.length >1
+                log.info "many to one relationship"
+                @createTest(testdata.id, t, i, t.destnodes[0])  for i in t.sourcenodes 
+
+            else if t.destnodes.length is t.sourcenodes.length or t.destnodes.length > t.sourcenodes.length
+                log.info "many to one relationship - dest nodes have more number"
+                iter = 0
+                @createTest(testdata.id, t, i, t.destnodes[iter++])   for i in t.sourcenodes 
+            else
+                log.info "many to one relationship - src nodes have more number"
+                iter = 0
+                @createTest(testdata.id, t, t.sourcenodes[iter++], i)   for i in t.destnodes 
 
     deleteTest :(testid)->
 
@@ -888,7 +915,7 @@ class TopologyMaster
 
             #finally create a project                    
             log.info "TopologyMaster - Test Input JSON  schema check is passed " + JSON.stringify testdata            
-            obj.createTest testdata
+            obj.createTestSuite testdata
             return callback @testregistry.add testdata
 
         else

@@ -13,6 +13,7 @@ class switches
     constructor: (sw)->                
         @config = extend {}, sw
         @config.make ?= "bridge"
+        @config.ofversion ?= 1.0
         @status = {}
         @statistics = {}
         @tapifs = []
