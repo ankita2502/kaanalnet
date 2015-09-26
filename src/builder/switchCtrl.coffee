@@ -1,7 +1,8 @@
 brctl = require('brctldriver')
 ovs = require('ovsdriver')
 util = require('util')
-netem = require('./iproute2driver')
+netem = require('linuxtcdriver')
+delLink = require('linuxtcdriver').delLink
 StormData = require('stormdata')
 StormRegistry = require('stormregistry')
 #===============================================================================================#
@@ -226,8 +227,13 @@ class SwitchBuilder
 			bridge  = brctl
 		return callback new Error "Switch details not found in DB" unless sdata?
 		return callback true unless chars.config?
-		netem.setLinkChars chars.name, chars.config,(result)=>
-			console.log "SwitchCtrl - setLinkCahrs output " + result
-			callback true
+
+		#netem.setLinkChars chars.name, chars.config,(result)=>
+		#	console.log "SwitchCtrl - setLinkCahrs output " + result
+		#	callback true
+		Netem = new netem(chars.name, chars.config)
+		Netem.create()
+		callback true
+
 
 module.exports = new SwitchBuilder

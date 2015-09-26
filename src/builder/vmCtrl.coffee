@@ -3,7 +3,8 @@ StormRegistry = require('stormregistry')
 #vm = require('./lxcdriver')
 Vm = require('lxcdriver')
 util = require('util')
-netem = require('./iproute2driver')
+#netem = require('./iproute2driver')
+netem = require('linuxtcdriver')
 #===============================================================================================#
 
 class VmRegistry extends StormRegistry
@@ -217,9 +218,12 @@ class VmBuilder
         for i in vmdata.data.ifmap            
             util.log "Vmctrl - setLinkChars " + JSON.stringify i
             if i.config?
-                netem.setLinkChars i.veth, i.config,(result)=>
-                    console.log "setLinkCahrs output " + result
+                Netem =  new netem(i.veth,i.config)
+                Netem.create()
                 callback true
+                #netem.setLinkChars i.veth, i.config,(result)=>
+                #    console.log "setLinkCahrs output " + result
+                #callback true
 
 
 
