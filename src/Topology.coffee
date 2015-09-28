@@ -295,14 +295,14 @@ class Topology
                         return create
                     (repeat)->
                         n.getstatus (result)=>
-                            log.info "node creation #{n.config.name} status " + result.data.status
-                            unless result.data.status is "creation-in-progress"
+                            log.info "node creation #{n.config.name} status " + result.status
+                            unless result.status is "creation-in-progress"
                                 create = true
                                 n.start (result)=>                    
                                     log.info "node start #{n.config.name} result " + JSON.stringify result
                                     return
                             #something wrong on node creation
-                            if result.data.status is "failed"  
+                            if result.status is "failed"  
                                 return new Error "node creation failed"
 
                             setTimeout(repeat, 15000);

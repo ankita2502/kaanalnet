@@ -1,130 +1,71 @@
 brctl = require('brctldriver')
 ovs = require('ovsdriver')
 util = require('util')
+
 netem = require('linuxtcdriver')
 delLink = require('linuxtcdriver').delLink
-StormData = require('stormdata')
-StormRegistry = require('stormregistry')
-#===============================================================================================#
-
-class SwitchRegistry extends StormRegistry
-    constructor: (filename) ->
-        @on 'load', (key,val) ->
-            #console.log "restoring #{key} with:" + val
-            entry = new SwitchData key,val
-            if entry?
-                entry.saved = true
-                @add entry
-
-        @on 'removed', (entry) ->
-            entry.destructor() if entry.destructor?
-
-        super filename
-
-    add: (data) ->
-        return unless data instanceof SwitchData
-        entry = super data.id, data
-
-    update: (data) ->        
-        super data.id, data    
-
-    get: (key) ->
-        entry = super key
-        return unless entry?
-
-        if entry.data? and entry.data instanceof SwitchData
-            entry.data.id = entry.id
-            entry.StormData
-        else
-            entry
 
 #===============================================================================================#
 
-class SwitchData extends StormData
-    Schema =
-        name: "switch"
-        type: "object"        
-        properties:                        
-            name: {type:"string", required:true}                       
-            type:{ type: "string", required: true}
-            make: { type: "string", required: false}           	
-            controller: { type: "string", required: false}
-            ofversion: { type: "number", required: false}
-            
-    constructor: (id, data) ->
-        super id, data, Schema
-#===============================================================================================#
+keystore = require('./../utils/keystore')
+Schema = require('./../schema').switchschema
+
+
 
 class SwitchBuilder
-	@records = []
+	#@records = []
 	bridge = null
+
 	constructor: () ->		
-		@registry = new SwitchRegistry #"/tmp/switches.db"
-		
-		@registry.on 'load',(key,val) ->
-			#util.log "Loading key #{key} with val #{val}"	
+		@registry = new keystore "switch",Schema
 
 	list : (callback) ->
         return callback @registry.list()
 
-    get: (data, callback) ->
-    	callback @registry.get data
-		#callback @registry.get data
+    get: (id, callback) ->
+    	callback @registry.get id		
 
-	create:(data,callback) ->
-		try			
-			sdata = new SwitchData(null, data )
-		catch err
-			util.log "invalid schema" + err
-			return callback new Error "invalid schema"
-		finally			
-
-			if data.make is "openvswitch"
-				bridge  = ovs
-			else
-				bridge  = brctl
-
-			# if switch make is "bridge"
-			bridge.createBridge data.name, (result) =>
-				util.log "Bridge creation " + result				
-				
-				if result is false
-					sdata.data.status = "failed"
-					sdata.data.reason = "failed to create"
-				else
-					sdata.data.status = "created"
-				@registry.add sdata
-				return callback
-					"id" : sdata.id
-					"status" : sdata.data.status
-					"reason" : sdata.data.reason if sdata?.data?.reason?
-									
-				
-		# if switch make is "ovs"
-	addInterface : (data, body, callback) ->
-		util.log "addInterface body is "+ JSON.stringify body
-		util.log "addInterface data is "+ data
-		sdata = @registry.get data
-		util.log "addInterface sdata is "+ JSON.stringify sdata
-		return callback new Error "Switch details not found in DB" unless sdata?
-		if sdata.data.make is "openvswitch"
+	create:(data,callback) ->	
+		id = @registry.add data 		
+		util.log "new switch data created - data #{id} "
+		return callback new Error "invalid Schema" if id instanceof Error or false
+		if data.make is "openvswitch"
 			bridge  = ovs
 		else
 			bridge  = brctl
 
+		# if switch make is "bridge"
+		bridge.createBridge data.name, (result) =>
+			util.log "Bridge creation " + result								
+			if result is false
+				data.status = "failed"
+				data.reason = "failed to create"
+			else
+				data.status = "created"
+			@registry.update id, data
+			return callback
+				"id" : id
+				"status" : data.status
+				"reason" : data.reason if data.reason?		
 
-		bridge.addInterface sdata.data.name, body.ifname, (result) =>
+	addInterface : (id, body, callback) ->
+		util.log "addInterface body is " + JSON.stringify body
+		util.log "addInterface data is " + id
+		sdata = @registry.get id
+		util.log "addInterface sdata is "+ JSON.stringify sdata
+		return callback new Error "Switch details not found in DB" unless sdata?
+		if sdata.make is "openvswitch"
+			bridge  = ovs
+		else
+			bridge  = brctl
+
+		bridge.addInterface sdata.name, body.ifname, (result) =>
 			util.log "addif" + result			
-			#if result is false	
-			#	sdata.data.status = "failed"
-			#	sdata.data.reason = "failed to add interface"
-			#else
-			#	sdata.data.status = "interface added"
-			#@registry.update sdata.id , sdata
+
 			return callback 
 				"id" : sdata.id
-				"status" : sdata.data.status					
-				"reason" : sdata.data.reason if sdata.data?.reason?
+				"status" : sdata.status					
+				"reason" : sdata.reason if sdata.reason?
 
 
 	CreateTapInterfaces : (ifname1,ifname2) ->		
@@ -133,69 +74,69 @@ class SwitchBuilder
 			util.log "createTapPeers " + result			
 			return result 
 
-	start : (data, callback) ->
-		sdata = @registry.get data
+	start : (id, callback) ->
+		sdata = @registry.get id
 		return callback new Error "Switch details not found in DB" unless sdata?
-		if sdata.data.make is "openvswitch"
+		if sdata.make is "openvswitch"
 			bridge  = ovs
-			if sdata.data.controller?
-				bridge.setController sdata.data.name, sdata.data.controller, (result) =>
+			if sdata.controller?
+				bridge.setController sdata.name, sdata.controller, (result) =>
 					util.log result
-					bridge.setOFVersion sdata.data.name, sdata.data.ofversion, (res) =>
+					bridge.setOFVersion sdata.name, sdata.ofversion, (res) =>
 						util.log res
 		else
 			bridge  = brctl
 
 
-		bridge.enableBridge sdata.data.name, (result) =>
+		bridge.enableBridge sdata.name, (result) =>
 			util.log "enableBridge" + result			
 			if result is false	
-				sdata.data.status = "failed"
-				sdata.data.reason = "failed to start"
+				sdata.status = "failed"
+				sdata.reason = "failed to start"
 			else
-				sdata.data.status = "started"				
+				sdata.status = "started"				
 			@registry.update sdata.id , sdata
 			return callback 
 				"id" : sdata.id
-				"status" : sdata.data.status					
-				"reason" : sdata.data.reason if sdata.data?.reason?
+				"status" : sdata.status					
+				"reason" : sdata.reason if sdata.reason?
 
-	stop : (data, callback) ->
-		sdata = @registry.get data
+	stop : (id, callback) ->
+		sdata = @registry.get id
 		return callback new Error "Switch details not found in DB" unless sdata?
 
-		if sdata.data.make is "openvswitch"
+		if sdata.make is "openvswitch"
 			bridge  = ovs
 		else
 			bridge  = brctl
 
-		bridge.disableBridge sdata.data.name, (result) =>
+		bridge.disableBridge sdata.name, (result) =>
 			util.log "disableBridge" + result			
 			if result is false	
-				sdata.data.status = "failed"
-				sdata.data.reason = "failed to stop"
+				sdata.status = "failed"
+				sdata.reason = "failed to stop"
 			else
-				sdata.data.status = "stopped"
+				sdata.status = "stopped"
 			@registry.update sdata.id , sdata
 			return callback 
 				"id" : sdata.id
-				"status" : sdata.data.status					
-				"reason" : sdata.data.reason if sdata.data?.reason?
+				"status" : sdata.status					
+				"reason" : sdata.reason if sdata.reason?
 
-	del: (data,callback) -> 	 
+	del: (id,callback) -> 	 
 		#Get the Switchname from db
-		sdata = @registry.get data
-		if sdata.data.make is "openvswitch"
+		sdata = @registry.get id
+		if sdata.make is "openvswitch"
 			bridge  = ovs
 		else
 			bridge  = brctl
 		return callback new Error "Switch details not found in DB" unless sdata?
 		
-		bridge.deleteBridge sdata.data.name, (result) =>
+		bridge.deleteBridge sdata.name, (result) =>
 			util.log "deletBridge" + result
 			return callback new Error "Failed to Delete the Switch" if result is false
 			#delete the switch from db
-			@registry.remove sdata.id
+			@registry.del sdata.id
 			return callback 
 				"id":sdata.id
 				"status": "deleted"
@@ -204,33 +145,30 @@ class SwitchBuilder
 		netem.delLink ifname,(result)->
 			callback result
 
-	status: (data, callback) ->
+	status: (id, callback) ->
 		#Todo
-		sdata = @registry.get data
+		sdata = @registry.get id
 		return callback new Error "Switch details not found in DB" unless sdata?
 		if sdata.data.make is "openvswitch"
 			bridge  = ovs
 		else
 			bridge  = brctl
-		bridge.getStatus sdata.data.name, (result) =>
+		bridge.getStatus sdata.name, (result) =>
 			util.log "SwitchCtrl getStatus" + result
-			sdata.data.status = result
-			@registry.update sdata
+			sdata.status = result
+			@registry.update id, sdata
 			return callback sdata
 			#delete the switch from db
 
-	setLinkChars: (data, chars, callback)->
-		sdata = @registry.get data
-		if sdata.data.make is "openvswitch"
+	setLinkChars: (id, chars, callback)->
+		sdata = @registry.get id
+		if sdata.make is "openvswitch"
 			bridge  = ovs
 		else
 			bridge  = brctl
 		return callback new Error "Switch details not found in DB" unless sdata?
 		return callback true unless chars.config?
 
-		#netem.setLinkChars chars.name, chars.config,(result)=>
-		#	console.log "SwitchCtrl - setLinkCahrs output " + result
-		#	callback true
 		Netem = new netem(chars.name, chars.config)
 		Netem.create()
 		callback true
