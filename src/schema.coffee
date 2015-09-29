@@ -66,14 +66,54 @@ TestSchema =
                     trafficconfig:
                         type: "object"
                         required: true
+TopologySchema =
+    name: "Topology"
+    type: "object"        
+    #additionalProperties: true
+    properties:                        
+        name: {type:"string", required:true}
+        switches:
+            type: "array"
+            items:
+                name: "switch"
+                type: "object"
+                required: true
+                properties:
+                    name: {type:"string", required:false}            
+                    type:  {type:"string", required:false}                                                            
+        nodes:
+            type: "array"
+            items:
+                name: "node"
+                type: "object"
+                required: true
+                properties:
+                    name: {type:"string", required:true}            
+                    type: {type:"string", required:false}
+        links:
+            type: "array"
+            items:
+                name: "node"
+                type: "object"
+                required: true            
+                properties:                
+                    type: {type:"string", required:true}
+                    switches:
+                        type : "array"                     
+                        required: false
+                        items:
+                            type : "object"
+                            required: false
+                    connected_nodes:
+                        type: "array"
+                        required: false
+                        items:
+                            type: "object"
+                            required: false
+                            properties:
+                                name:{"type":"string", "required":true}
 
-
-
-
-
-
-
-
+module.exports.topologyschema = TopologySchema
 module.exports.switchschema = SwitchSchema
 module.exports.nodeschema = NodeSchema
-module.exports.testschema = TestSchema                        
+module.exports.testschema = TestSchema

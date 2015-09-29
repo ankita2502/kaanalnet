@@ -1,5 +1,3 @@
-StormRegistry = require 'stormregistry'
-StormData = require 'stormdata'
 util = require('util')
 request = require('request-json');
 extend = require('util')._extend

@@ -1,6 +1,4 @@
 assert = require 'assert'
-StormRegistry = require 'stormregistry'
-StormData = require 'stormdata'
 util = require('util')
 request = require('request-json');
 extend = require('util')._extend
@@ -9,115 +7,26 @@ async = require 'async'
 util = require 'util'
 
 
+
 IPManager = require('./IPManager')
 node = require('./Node')
 switches = require('./Switches')
 test = require('./Test')
 
+#keystore library 
 keystore = require('./utils/keystore')
 
 #Log handler
 log = require('./utils/logger').getLogger()
 log.info "Topology Logger test message"
+
+#schema
+TestSchema = require('./schema').testschema
+TopologySchema = require('./schema').topologyschema
+
+
 x = 0
 sindex = 1
-
-
-
-
-
-TestSchema = require('./schema').testschema
-
-
-
-
-
-
-
-#============================================================================================================
-class TopologyRegistry extends StormRegistry
-    constructor: (filename) ->
-        @on 'load', (key,val) ->
-            #log.debug "restoring #{key} with:",val
-            entry = new TopologyData key,val
-            if entry?
-                entry.saved = true
-                @add entry
-
-        @on 'removed', (entry) ->
-            entry.destructor() if entry.destructor?
-
-        super filename
-
-    add: (data) ->
-        return unless data instanceof TopologyData
-        entry = super data.id, data
-
-    update: (data) ->        
-        super data.id, data    
-
-    get: (key) ->
-        entry = super key
-        return unless entry?
-
-        if entry.data? and entry.data instanceof TopologyData
-            entry.data.id = entry.id
-            entry.data
-        else
-            entry
-
-#============================================================================================================
-
-class TopologyData extends StormData
-    TopologySchema =
-        name: "Topology"
-        type: "object"        
-        #additionalProperties: true
-        properties:                        
-            name: {type:"string", required:true}
-            switches:
-                type: "array"
-                items:
-                    name: "switch"
-                    type: "object"
-                    required: true
-                    properties:
-                        name: {type:"string", required:false}            
-                        type:  {type:"string", required:false}                                                            
-            nodes:
-                type: "array"
-                items:
-                    name: "node"
-                    type: "object"
-                    required: true
-                    properties:
-                            name: {type:"string", required:true}            
-                            type: {type:"string", required:false}
-            links:
-                type: "array"
-                items:
-                    name: "node"
-                    type: "object"
-                    required: true            
-                    properties:                
-                        type: {type:"string", required:true}
-                        switches:
-                            type : "array"                     
-                            required: false
-                            items:
-                                type : "object"
-                                required: false
-                        connected_nodes:
-                            type: "array"
-                            required: false
-                            items:
-                                type: "object"
-                                required: false
-                                properties:
-                                    name:{"type":"string", "required":true}
-
-    constructor: (id, data) ->
-        super id, data, TopologySchema
 
 #============================================================================================================
 class Topology   
@@ -480,17 +389,6 @@ class Topology
         x = 0
         log.info "Topology - building  a WAN link " +  JSON.stringify val
         temp = @ipmgr.getFreeWanSubnet()
-        #swname = "#{val.type}_#{val.connected_nodes[0].name}_#{val.connected_nodes[1].name}"
-        #swname = "#{val.type}_sw#{sindex}"
-        #sindex++
-        #log.debug "  wan swname is "+ swname
-        #obj = new switches
-        #    name : swname
-        #    ports: 2
-        #    type : val.type
-        #    make : @sysconfig.switchtype
-        #    controller : @sysconfig.controller if @sysconfig.controller?
-        #@switchobj.push obj
         sw = val.switches[0]
         swobj = @getSwitchObjbyName(sw.name)
         if swobj is null
@@ -517,7 +415,7 @@ class Topology
     #Topology REST API functions
     create :(@tdata)->
         #util.log "Topology create - topodata: " + JSON.stringify @tdata                             
-        @config = extend {}, @tdata.data      
+        @config = extend {}, @tdata
         @uuid = @tdata.id
         log.info "Topology - creation is started with data :  " + JSON.stringify @config        
 
@@ -686,9 +584,7 @@ class Topology
 
 class TopologyMaster
     constructor :() ->
-        #@registry = new TopologyRegistry filename if filename?
-        @registry = new TopologyRegistry
-        #@testregistry = new TestRegistry
+        @registry = new keystore "topology",TopologySchema
         @testregistry = new keystore "test",TestSchema
 
         @topologyObj = {}
@@ -703,14 +599,12 @@ class TopologyMaster
     list : (callback) ->
         return callback @registry.list()
 
-    create : (data, callback)->
-        try	            
-            topodata = new TopologyData null, data    
-        catch err
-            log.error "TopologyMaster - create - invalid schema " + JSON.stringify err
-            return callback new Error "Invalid Input "
-        finally				
-            #log.info "TopologyMaster - create - topologyData " + JSON.stringify topodata 
+    create : (topodata, callback)->
+
+        id = @registry.add topodata         
+        return callback new Error "invalid Schema" if id instanceof Error or false
+        topodata.id = id
+        util.log "new topology data created - id #{topodata.id} "
 
         #finally create a project                    
         log.info "TopologyMaster - Topology Input JSON  schema check is passed " + JSON.stringify topodata
@@ -719,13 +613,13 @@ class TopologyMaster
         obj.create topodata              
         @topologyObj[obj.uuid] = obj
         obj.run()
-        return callback @registry.add topodata                
+        return callback topodata #@registry.add topodata                
    
     del : (id, callback) ->
         obj = @topologyObj[id]
         if obj? 
             #remove the registry entry
-            @registry.remove obj.uuid
+            @registry.del obj.uuid
             #remove the topology object entry from hash
             delete @topologyObj[id]
             #call the del method to remove the nodes, switches etc.
@@ -845,18 +739,7 @@ class TopologyMaster
             id = @testregistry.add testdata         
             return callback new Error "invalid Schema" if id instanceof Error or false
             testdata.id = id
-            util.log "new test data created - data #{testdata.id} "
-            
-            ###
-            try             
-                testdata = new TestData null, data    
-            catch err
-                log.error "TopologyMaster - Test create - invalid schema " + JSON.stringify err
-                return callback new Error "Invalid Input "
-            finally             
-                #log.info "TopologyMaster - create - testData " + JSON.stringify testdata 
-            ###
-            #finally create a project                    
+            util.log "new test data created - id #{testdata.id} "                 
             log.info "TopologyMaster - Test Input JSON  schema check is passed " + JSON.stringify testdata            
             obj.createTestSuite testdata
             return callback testdata
