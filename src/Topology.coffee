@@ -14,6 +14,7 @@ node = require('./Node')
 switches = require('./Switches')
 test = require('./Test')
 
+keystore = require('./utils/keystore')
 
 #Log handler
 log = require('./utils/logger').getLogger()
@@ -21,81 +22,16 @@ log.info "Topology Logger test message"
 x = 0
 sindex = 1
 
-## Global IP Manager for  -- To be relooked the design
-#MGMT_SUBNET = "10.0.3.0"
-#WAN_SUBNET = "172.16.1.0"
-#LAN_SUBNET = "10.10.10.0"
 
 
-#============================================================================================================
-class TestRegistry extends StormRegistry
-    constructor: (filename) ->
-        @on 'load', (key,val) ->
-            #log.debug "restoring #{key} with:",val
-            entry = new TestData key,val
-            if entry?
-                entry.saved = true
-                @add entry
 
-        @on 'removed', (entry) ->
-            entry.destructor() if entry.destructor?
 
-        super filename
+TestSchema = require('./schema').testschema
 
-    add: (data) ->
-        return unless data instanceof TestData
-        entry = super data.id, data
 
-    update: (data) ->        
-        super data.id, data    
 
-    get: (key) ->
-        entry = super key
-        return unless entry?
 
-        if entry.data? and entry.data instanceof TestData
-            entry.data.id = entry.id
-            entry.data
-        else
-            entry
 
-#============================================================================================================
-
-#============================================================================================================
-
-class TestData extends StormData
-    TestSchema =
-        name: "Test"
-        type: "object"        
-        #additionalProperties: true
-        properties:                        
-            name: {type:"string", required:true}
-            tests:
-                type: "array"
-                items:
-                    name: "test"
-                    type: "object"
-                    required: true
-                    properties:
-                        sourcenodes :
-                            type: "array"
-                            items:
-                                type: "string"
-                                required: true
-                        destnodes :
-                            type: "array"
-                            items:
-                                type: "string"
-                                required: true
-                        traffictype: {type:"string", required:true}            
-                        starttime:  {type:"number", required:false}    
-                        duration:  {type:"number", required:true}                           
-                        trafficconfig:
-                            type: "object"
-                            required: true
-
-    constructor: (id, data) ->
-        super id, data, TestSchema
 
 
 #============================================================================================================
@@ -701,7 +637,7 @@ class Topology
         #can be converted in to async model
         log.info "createTest called with " + JSON.stringify testdata
 
-        for t in testdata.data.tests
+        for t in testdata.tests
             #relationship 
             log.info  "test sourcenodes length" , t.sourcenodes.length
             log.info  "test destnodes length " , t.destnodes.length
@@ -752,7 +688,8 @@ class TopologyMaster
     constructor :() ->
         #@registry = new TopologyRegistry filename if filename?
         @registry = new TopologyRegistry
-        @testregistry = new TestRegistry
+        #@testregistry = new TestRegistry
+        @testregistry = new keystore "test",TestSchema
 
         @topologyObj = {}
         @sysconfig = {}
@@ -902,9 +839,15 @@ class TopologyMaster
         else
             return callback new Error "Unknown Topology ID"
 
-    testSuiteCreate: (topolid, data, callback) ->
+    testSuiteCreate: (topolid, testdata, callback) ->
         obj = @topologyObj[topolid]
         if obj? 
+            id = @testregistry.add testdata         
+            return callback new Error "invalid Schema" if id instanceof Error or false
+            testdata.id = id
+            util.log "new test data created - data #{testdata.id} "
+            
+            ###
             try             
                 testdata = new TestData null, data    
             catch err
@@ -912,12 +855,11 @@ class TopologyMaster
                 return callback new Error "Invalid Input "
             finally             
                 #log.info "TopologyMaster - create - testData " + JSON.stringify testdata 
-
+            ###
             #finally create a project                    
             log.info "TopologyMaster - Test Input JSON  schema check is passed " + JSON.stringify testdata            
             obj.createTestSuite testdata
-            return callback @testregistry.add testdata
-
+            return callback testdata
         else
             return callback new Error "Unknown Topology ID"
 
@@ -942,7 +884,7 @@ class TopologyMaster
         obj = @topologyObj[topolid]
         if obj? 
             obj.deleteTest testsuiteid
-            @testregistry.remove testsuiteid
+            @testregistry.del testsuiteid
         else
             return callback new Error "Unknown Topology ID"
 

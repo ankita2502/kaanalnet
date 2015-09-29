@@ -37,6 +37,35 @@ NodeSchema =
                     config : 
                         type: "object"
                         required: false		
+TestSchema =
+    name: "Test"
+    type: "object"        
+    #additionalProperties: true
+    properties:                        
+        name: {type:"string", required:true}
+        tests:
+            type: "array"
+            items:
+                name: "test"
+                type: "object"
+                required: true
+                properties:
+                    sourcenodes :
+                        type: "array"
+                        items:
+                            type: "string"
+                            required: true
+                    destnodes :
+                        type: "array"
+                        items:
+                            type: "string"
+                            required: true
+                    traffictype: {type:"string", required:true}            
+                    starttime:  {type:"number", required:false}    
+                    duration:  {type:"number", required:true}                           
+                    trafficconfig:
+                        type: "object"
+                        required: true
 
 
 
@@ -46,4 +75,5 @@ NodeSchema =
 
 
 module.exports.switchschema = SwitchSchema
-module.exports.nodeschema = NodeSchema                        
+module.exports.nodeschema = NodeSchema
+module.exports.testschema = TestSchema                        
