@@ -15,17 +15,22 @@ KaanalNet creates a Virtual Network Lab on your Laptop or Desktop or Cloud. It c
 *   Traffic Tests (icmp,udp,tcp) support
 
 KaanalNet uses the Linux Containers (LXC), openvswitch, linux bridge and ping,iperf(traffic utilities). 
-KaanalNet is tested with  OpenDayLight and POX SDN controller.
+KaanalNet is tested with  OpenDayLight, RYU and POX SDN controller.
+
+*Supportd only on **UBUNTU 14.04** OS.*     
+
+###Support 
+
+**Support is available on kaanalnet-discuss@freelists.org**            
+To subscribe, click the below link              
+http://www.freelists.org/list/kaanalnet-discuss
 
 
-*Current release is a Beta Release.*
-
-*It has been tested on only **UBUNTU 14.04** version.*     
-
-**Support is available on kaanalnet-discuss@freelists.org**
-
-
+### Document      
 The Detailed Documentaion is available in Github WiKi.        
+https://github.com/sureshkvl/kaanalnet/wiki           
+Website :  http://www.kaanalnet.org
 
-https://github.com/sureshkvl/kaanalnet/wiki       
+
+
 

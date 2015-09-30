@@ -1,0 +1,19 @@
+Release 0.1.1
+-------------
+Features:
+a.  Openflow version configuration support
+b.  Traffic Tests enhancements (one to one, one to many, many to one)
+
+Bug Fixes:
+
+
+Release 0.1.0
+--------------
+This is first release
+Features:
+a.  Network Emulator basic framework 
+b.  REST API support 
+c.  Traditional/SDN/Mixed Network Topology simulation
+d.  Link characteristics configuration
+e.  Control the nodes
+f.  Traffic Tests
