@@ -21,6 +21,7 @@
 	"ovsdriver":"0.0.2",
 	"brctldriver":"0.0.1",
 	"linuxtcdriver":"0.0.2",
+	"mem-db":"0.0.1",
 	"jfs":"0.2.6"
 	},
 	"devDependencies": {

@@ -92,6 +92,12 @@ class node
             log.info "node start result " + JSON.stringify result
             @config.status = result.status
             callback result
+    provision : (callback)->
+        log.info "provisioning  a node " + @config.name
+        vmctrl.provision @uuid, (result) =>
+            log.info "node provision result " + JSON.stringify result
+            #@config.status = result. status
+            callback result
     stop : (callback)->
         log.info "stopping a node " + @config.name
         vmctrl.stop @uuid, (result) =>

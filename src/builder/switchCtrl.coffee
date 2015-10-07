@@ -7,7 +7,7 @@ delLink = require('linuxtcdriver').delLink
 
 #===============================================================================================#
 
-keystore = require('./../utils/keystore')
+keystore = require('mem-db')
 Schema = require('./../schema').switchschema
 
 

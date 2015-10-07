@@ -1,10 +1,9 @@
-
 Vm = require('lxcdriver')
 util = require('util')
 netem = require('linuxtcdriver')
 #===============================================================================================#
 
-keystore = require('./../utils/keystore')
+keystore = require('mem-db')
 Schema = require('./../schema').nodeschema
 
 #===============================================================================================#
@@ -90,6 +89,17 @@ class VmBuilder
                     "id": vmdata.id
                     "status":vmdata.status
                     "reason": vmdata.reason
+    provision : (id, callback) ->
+        console.log "provision is called ", id
+        vmdata = @registry.get id
+        return callback new Error "VM details not found in DB" if vmdata is false or vmdata instanceof Error
+        console.log "provision ", vmdata
+        vmobj = @vmobjs[id]        
+        return callback new Error "vm obj not found" unless vmobj?
+        #Todo - provisioning routines to be placed here
+        return callback
+            "id" : vmdata.id
+            "status" : "provisioned"
 
     stop:(id,callback) ->
         vmdata = @registry.get id
@@ -150,16 +160,39 @@ class VmBuilder
     setLinkChars : (id,callback)->
         vmdata = @registry.get id
         return callback new Error "VM details not found in DB" if vmdata is false or vmdata instanceof Error
+
+        #updating the startup script of the host fopr link simulation
+        vmobj = @vmobjs[id]  
+        for i in vmdata.ifmap            
+            util.log "Vmctrl - setLinkChars " + JSON.stringify i
+            if i.config?                
+                #switch side configuration  (veth)
+                Netem1 =  new netem(i.veth,i.config)
+                Netem1.create()
+        callback true
+
+    configStartup :(vmdata)->   
+        util.log "in configStartup routine", JSON.stringify vmdata
+        vmobj = @vmobjs[vmdata.id]        
+
+
+        #updating the link charactristics simulation        
         for i in vmdata.ifmap            
             util.log "Vmctrl - setLinkChars " + JSON.stringify i
             if i.config?
-                Netem =  new netem(i.veth,i.config)
-                Netem.create()
-                callback true
+                #host side configuration
+                Netem =  new netem(i.ifname,i.config)
+                #Netem.create()
+                console.log Netem.commands
+                text = " "
+                for command in Netem.commands
+                    console.log "command ", command
+                    text += "\n #{command}"
+                text += "\n"
+                console.log "string command ", text
+                #text = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n /usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
+                vmobj.appendFile("/etc/init.d/rc.local",text)            
 
-    configStartup :(vmdata)->
-        util.log "in configStartup routine", JSON.stringify vmdata
-        vmobj = @vmobjs[vmdata.id]        
         if vmdata.type is "router"
             util.log 'its router'
 

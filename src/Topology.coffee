@@ -14,7 +14,7 @@ switches = require('./Switches')
 test = require('./Test')
 
 #keystore library 
-keystore = require('./utils/keystore')
+keystore = require('mem-db')
 
 #Log handler
 log = require('./utils/logger').getLogger()
@@ -163,10 +163,10 @@ class Topology
                 log.info "createNodes all are processed "
                 cb (true)
 
-    ###
+    
     #currently not used
     #
-    provisionNodes :(cb)->
+    provisionnodes :(cb)->
         async.each @nodeobj, (n,callback) =>
             log.info "provisioning a node #{n.uuid}"
             n.provision (result) =>   
@@ -180,7 +180,7 @@ class Topology
             else
                 log.info "provisionNodes all are processed "
                 cb (true)
-    ###
+
     destroyNodes :()->
         #@tmparray = []
         #@destroySwithes()
@@ -481,6 +481,12 @@ class Topology
                     log.info "TOPOLOGY - CONFIG INTER SWITCH LINK  CHARS RESULT "  + res
                     callback(null,"CONFIG INTERSWITCH LINK CHAR success") if res is true
                     callback new Error ('CONFIG INTERSWITCH  LINK CHARS failed')  unless res is true              
+            (callback)=>
+                log.info "TOPOLOGY - Provisioning the nodes "   
+                @provisionnodes (res)=>
+                    log.info "TOPOLOGY - Provisioning the nodes "  + res
+                    callback(null,"node provisoning  success") if res is true
+                    callback new Error ('node provisioning failed')  unless res is true
             ],
             (err,result)=>
                 log.info "TOPOLOGY -  RUN result is  %s ", result
@@ -608,7 +614,7 @@ class TopologyMaster
 
         #finally create a project                    
         log.info "TopologyMaster - Topology Input JSON  schema check is passed " + JSON.stringify topodata
-        obj = new Topology        
+        obj = new Topology 
         obj.systemconfig @sysconfig
         obj.create topodata              
         @topologyObj[obj.uuid] = obj
