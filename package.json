@@ -20,7 +20,7 @@
 	"lxcdriver":"0.0.2",
 	"ovsdriver":"0.0.2",
 	"brctldriver":"0.0.1",
-	"linuxtcdriver":"0.0.2",
+	"linuxtcdriver":"0.0.3",
 	"mem-db":"0.0.1",
 	"jfs":"0.2.6"
 	},

@@ -90,7 +90,7 @@ class VmBuilder
                     "status":vmdata.status
                     "reason": vmdata.reason
     provision : (id, callback) ->
-        console.log "provision is called ", id
+        console.log "Dummy provisioning is called ", id
         vmdata = @registry.get id
         return callback new Error "VM details not found in DB" if vmdata is false or vmdata instanceof Error
         console.log "provision ", vmdata
@@ -160,15 +160,11 @@ class VmBuilder
     setLinkChars : (id,callback)->
         vmdata = @registry.get id
         return callback new Error "VM details not found in DB" if vmdata is false or vmdata instanceof Error
-
-        #updating the startup script of the host fopr link simulation
-        vmobj = @vmobjs[id]  
         for i in vmdata.ifmap            
             util.log "Vmctrl - setLinkChars " + JSON.stringify i
             if i.config?                
-                #switch side configuration  (veth)
-                Netem1 =  new netem(i.veth,i.config)
-                Netem1.create()
+                Netem =  new netem(i.veth,i.config)
+                Netem.create()
         callback true
 
     configStartup :(vmdata)->   
