@@ -577,7 +577,7 @@ EOF
         echo "Installing packages: ${packages}"
         install_packages $rootfs $packages
     fi
-    install_packages $rootfs nodejs npm quagga iperf 
+    install_packages $rootfs nodejs npm quagga iperf telnet
 
     install_npmpackages $rootfs "testagent"
     # Set initial timezone as on host
