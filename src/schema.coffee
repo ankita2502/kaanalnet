@@ -15,6 +15,7 @@ NodeSchema =
     properties:
         name : {"type":"string", "required":true}                    
         type : {"type":"string", "required":false}
+        protocol : {"type":"string", "required":false}
         virtulization : {"type":"string", "required":false}
         image : {"type":"string", "required":false}
         memory : {"type":"string", "required":false}   
@@ -90,6 +91,8 @@ TopologySchema =
                 properties:
                     name: {type:"string", required:true}            
                     type: {type:"string", required:false}
+                    protocol: {type:"string", required:false}
+
         links:
             type: "array"
             items:

@@ -82,7 +82,7 @@ lanipsubnets = (address)->
 class IPManager
     constructor :(wan,lan,mgmt) ->
         log.info "IPManager starts with wan pool #{wan} lan pool #{lan} mgmt pool #{mgmt}"        
-        @wansubnets = wansubnetting wan, 24, 30
+        @wansubnets = wansubnetting wan, 24, 29
         @lansubnets = lanipsubnets lan
         @wanindex = 0
         @lanindex = 0

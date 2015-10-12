@@ -58,7 +58,9 @@ class VmBuilder
                         vmobj.appendFile("/etc/network/interfaces",text)    
                     #write in to db
             #vmdata.data.id = vmdata.id
-            data.status = vmobj.state #"created"                                
+            data.status = vmobj.state #"created"
+            #default router protocol ospf if not mentioned
+            data.protocol ?= "ospf" if data.type is "router"
             @registry.update id, data
             @vmobjs[id] = vmobj
             return #callback({"id": id,"status": vmobj.state})       
@@ -167,7 +169,7 @@ class VmBuilder
                 Netem.create()
         callback true
 
-    configStartup :(vmdata)->   
+    configStartup :(vmdata)->
         util.log "in configStartup routine", JSON.stringify vmdata
         vmobj = @vmobjs[vmdata.id]        
 
@@ -192,26 +194,30 @@ class VmBuilder
         if vmdata.type is "router"
             util.log 'its router'
 
-            #updating the zebra config file
-            zebraconf = "hostname zebra \npassword zebra \nenable password zebra \n"
-            for i in vmdata.ifmap
-                zebraconf += "interface  #{i.ifname} \n"            
-                zebraconf += "   ip address #{i.ipaddress}/30 \n" if i.type is "wan"
-                zebraconf += "   ip address #{i.ipaddress}/27 \n" if i.type is "lan"
-                zebraconf += "   ip address #{i.ipaddress}/24 \n" if i.type is "mgmt"       
-            util.log "zebrafile " +  zebraconf            
+            #zebra config
+            zebraconf = @buildZebraConfig(vmdata)
             vmobj.appendFile("/etc/zebra.conf",zebraconf)
+            text = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n"
+            vmobj.appendFile("/etc/init.d/rc.local",text)
+            #protocol config
+            console.log "vmdata.protocol " ,vmdata.protocol
+            switch vmdata.protocol
+                when 'rip'
+                    console.log "ripd case"
+                    ripconf = @buildRipConfig(vmdata)  
+                    vmobj.appendFile("/etc/rip.conf",ripconf)
+                    text = "/usr/lib/quagga/ripd -f /etc/rip.conf -d & \n"
+                    vmobj.appendFile("/etc/init.d/rc.local",text)             
+                when 'ospf'              
+                    console.log "ospf case" 
+                    ospfconf = @buildOspfConfig(vmdata)
+                    vmobj.appendFile("/etc/ospf.conf",ospfconf)
+                    text = "/usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
+                    vmobj.appendFile("/etc/init.d/rc.local",text)                           
 
-            #ospf config
-            ospfconf = "hostname ospf \npassword zebra \nenable password zebra \nrouter ospf\n  "
-            for i in vmdata.ifmap
-                ospfconf += "   network #{i.ipaddress}/24 area 0 \n" unless i.type is "mgmt"
-            util.log "ospfconffile " + ospfconf
-            vmobj.appendFile("/etc/ospf.conf",ospfconf)
-            
-            #updating the startup script
-            text = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n /usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
-            vmobj.appendFile("/etc/init.d/rc.local",text)            
+                else
+                    console.log "default case"
+
             util.log "its router- to be returned here"
             return
         else
@@ -220,5 +226,40 @@ class VmBuilder
             text = "\nnodejs /node_modules/testagent/lib/app.js > /var/log/testagent.log & \n  iperf -s > /var/log/iperf_tcp_server.log & \n iperf -s -u > /var/log/iperf_udp_server.log & \n"
             vmobj.appendFile("/etc/init.d/rc.local",text)
             return
+
+    buildZebraConfig :(vmdata)->
+        #updating the zebra config file
+        zebraconf = "hostname zebra \npassword zebra \nenable password zebra \n"
+        for i in vmdata.ifmap
+            zebraconf += "interface  #{i.ifname} \n"            
+            zebraconf += "   ip address #{i.ipaddress}/29 \n" if i.type is "wan"
+            zebraconf += "   ip address #{i.ipaddress}/24 \n" if i.type is "lan"
+            zebraconf += "   ip address #{i.ipaddress}/24 \n" if i.type is "mgmt"       
+        util.log "zebrafile " +  zebraconf  
+        return zebraconf
+
+    buildOspfConfig :(vmdata)->
+        ospfconf = "hostname zebra \npassword zebra \nenable password zebra \nrouter ospf\n  "
+        for i in vmdata.ifmap
+            ospfconf += "   network #{i.ipaddress}/24 area 0 \n" unless i.type is "mgmt"
+        util.log "ospfconffile " + ospfconf
+        return ospfconf
+
+    buildBgpConfig :(vmdata)->
+        bgpconf = "hostname zebra \npassword zebra \nenable password zebra \nrouter bgp 1\n  "
+        for i in vmdata.ifmap
+            bgpconf += "   network #{i.ipaddress}/24  \n" unless i.type is "mgmt"
+        util.log "bgpconffile " + bgpconf
+        return bgpconf        
+
+
+    buildRipConfig :(vmdata)->
+        ripconf = "hostname zebra \npassword zebra \nenable password zebra \nrouter rip\n  "
+        for i in vmdata.ifmap
+            ripconf += "   network #{i.ipaddress}/24 \n" unless i.type is "mgmt"
+        util.log "ripconffile " + ripconf
+        return ripconf
+
+
 
 module.exports = new VmBuilder
