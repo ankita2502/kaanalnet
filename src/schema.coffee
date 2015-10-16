@@ -115,6 +115,8 @@ TopologySchema =
                             required: false
                             properties:
                                 name:{"type":"string", "required":true}
+                                lag:{"type":"boolean", "required":false}
+
 
 module.exports.topologyschema = TopologySchema
 module.exports.switchschema = SwitchSchema

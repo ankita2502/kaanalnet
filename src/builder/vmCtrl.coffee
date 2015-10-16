@@ -57,6 +57,7 @@ class VmBuilder
                         text = "\nauto #{x.ifname}\niface #{x.ifname} inet static \n\t address #{x.ipaddress} \n\t netmask #{x.netmask} \n\t gateway #{x.gateway}\n"
                         vmobj.appendFile("/etc/network/interfaces",text)    
                     #write in to db
+            
             #vmdata.data.id = vmdata.id
             data.status = vmobj.state #"created"
             #default router protocol ospf if not mentioned

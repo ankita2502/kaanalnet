@@ -352,7 +352,8 @@ class Topology
                         else
                             startaddress = temp.iparray[x++]  
                         log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config)
+                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) unless  n.lag?
+                        obj.addLagInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) if  n.lag?
                         log.info "Topology - #{obj.config.name} added the Lan interface" 
         
     buildInterSwitchLink:(val)->
