@@ -45,7 +45,7 @@ class switches
         #"status":@status
         #"statistics":@statistics
     stop:(callback)->
-        log.info "Switches -   stoping a switch " + JSON.stringify config
+        log.info "Switches -   stoping a switch " + JSON.stringify @config
         switchctrl.stop @uuid, (res) =>
             log.info "Switches - switch stop result " + JSON.stringify res
             @config.status = res.status
@@ -58,7 +58,17 @@ class switches
             log.info "Switches -   switch start result " + JSON.stringify res
             @config.status = res.status
             #console.log res
-            callback res                  
+            callback res   
+
+    getstatus : (callback)->
+        log.info "getstatus called" + @uuid
+        switchctrl.get @uuid, (result) =>
+            log.info "Switches getstatus result " + JSON.stringify result
+            @config.status = result.status
+            callback result
+
+
+
 
     connect:(ifname,callback)->
         val =

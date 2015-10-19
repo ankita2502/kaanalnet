@@ -667,10 +667,12 @@ class TopologyMaster
         obj = @topologyObj[topolid]
         if obj? 
             deviceobj = obj.getNodeObjbyUUID(deviceid)
+            deviceobj = obj.getSwitchObjbyUUID(deviceid) unless deviceobj?
             if deviceobj?
                 deviceobj.getstatus (result)=>
                     return callback result
             else                
+
                 return callback new Error "Unknown Device ID"
         else
             return callback new Error "Unknown Topology ID"
@@ -693,6 +695,7 @@ class TopologyMaster
         obj = @topologyObj[topolid]
         if obj? 
             deviceobj = obj.getNodeObjbyUUID(deviceid)
+            deviceobj = obj.getSwitchObjbyUUID(deviceid) unless deviceobj?
             if deviceobj?
                 deviceobj.start (result)=>
                     callback result
@@ -706,6 +709,7 @@ class TopologyMaster
         obj = @topologyObj[topolid]        
         if obj? 
             deviceobj = obj.getNodeObjbyUUID(deviceid)
+            deviceobj = obj.getSwitchObjbyUUID(deviceid) unless deviceobj?
             if deviceobj?
                 deviceobj.stop (result)=>
                     callback result
@@ -731,6 +735,7 @@ class TopologyMaster
         obj = @topologyObj[topolid]
         if obj? 
             deviceobj = obj.getNodeObjbyUUID(deviceid)
+            deviceobj = obj.getSwitchObjbyUUID(deviceid) unless deviceobj?
             if deviceobj?
                 deviceobj.del (result)=>    
                     return callback result
