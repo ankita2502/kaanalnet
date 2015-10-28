@@ -38,6 +38,11 @@ NodeSchema =
                     config : 
                         type: "object"
                         required: false		
+        lagmap:
+            type : "array"
+            items:
+                type :"object"
+                
 TestSchema =
     name: "Test"
     type: "object"        

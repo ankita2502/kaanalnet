@@ -26,10 +26,12 @@ getHwAddress = () ->
 class node
     constructor:(data) ->
         @ifmap = []        
-        @lagifs = []
+        @lagmap = []
         @ifindex = 1
+        @lagindex = 1
         @config = extend {}, data   
-        @config.ifmap = @ifmap        
+        @config.ifmap = @ifmap      
+        @config.lagmap = @lagmap  
         @statistics = {}
         @status = {}
         log.debug "node object created with  " + JSON.stringify @config
@@ -52,22 +54,26 @@ class node
         @lanip = ipaddress
 
     addLagInterface :(brname,ipaddress,subnetmask,gateway,characterstics)->
+        lagif1 = "eth#{@ifindex}"
+        veth1 = "#{@config.name}_veth#{@ifindex}"
+        @ifindex++
+        lagif2 = "eth#{@ifindex}"
+        veth2 = "#{@config.name}_veth#{@ifindex}"
         lagif =
-            "lagif1" : "leth#{@lagindex}"
+            "lagif1" : lagif1
             "hwAddress1" : getHwAddress()
-            "veth1" : "#{@config.name}_lveth#{@lagindex}"
-            "lagif2" : "leth#{@lagindex}"
+            "veth1" : veth1
+            "lagif2" : lagif2
             "hwAddress2" : getHwAddress()
-            "veth2" : "#{@config.name}_lveth#{@lagindex}"
+            "veth2" : veth2
             "brname" : brname 
             "ipaddress": ipaddress 
             "netmask" : subnetmask
             "gateway" : gateway if gateway?
             "type":"lan"            
             "config": characterstics
-        @lagifs.push lagif
-
-
+        @lagmap.push lagif
+        
     addWanInterface :(brname, ipaddress, subnetmask, gateway , characterstics) ->         
         #console.log "inside addWanInterface function"
         interf =

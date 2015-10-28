@@ -57,7 +57,17 @@ class VmBuilder
                         text = "\nauto #{x.ifname}\niface #{x.ifname} inet static \n\t address #{x.ipaddress} \n\t netmask #{x.netmask} \n\t gateway #{x.gateway}\n"
                         vmobj.appendFile("/etc/network/interfaces",text)    
                     #write in to db
-            
+
+            #processing the lag intefaces array
+            if data.lagmap?
+                for x in data.lagmap
+                    vmobj.addEthernetInterface(x.veth1,x.hwAddress1)
+                    vmobj.addEthernetInterface(x.veth2,x.hwAddress2)
+                    text = "\nauto #{x.lagif1}\niface #{x.lagif1} inet static \n\t address 0.0.0.0 \n\t netmask 255.255.255.0 \n"
+                    vmobj.appendFile("/etc/network/interfaces",text)                    
+                    text = "\nauto #{x.lagif2}\niface #{x.lagif2} inet static \n\t address 0.0.0.0 \n\t netmask 255.255.255.0 \n"
+                    vmobj.appendFile("/etc/network/interfaces",text)                                        
+
             #vmdata.data.id = vmdata.id
             data.status = vmobj.state #"created"
             #default router protocol ospf if not mentioned
