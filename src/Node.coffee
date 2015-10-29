@@ -100,6 +100,7 @@ class node
         log.debug "mgmt interface" + JSON.stringify interf
         @ifmap.push  interf
         @mgmtip = ipaddress
+        @config.mgmtip = @mgmtip
         #console.log @ifmap
 
     create : (callback)->
@@ -118,6 +119,9 @@ class node
             callback result
     provision : (callback)->
         log.info "provisioning  a node " + @config.name
+
+
+
         vmctrl.provision @uuid, (result) =>
             log.info "node provision result " + JSON.stringify result
             #@config.status = result. status

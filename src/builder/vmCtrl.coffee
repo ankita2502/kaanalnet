@@ -1,6 +1,7 @@
 Vm = require('lxcdriver')
 util = require('util')
 netem = require('linuxtcdriver')
+request = require('request-json')
 #===============================================================================================#
 
 keystore = require('mem-db')
@@ -110,9 +111,24 @@ class VmBuilder
         vmobj = @vmobjs[id]        
         return callback new Error "vm obj not found" unless vmobj?
         #Todo - provisioning routines to be placed here
+        # provision the LAG Bonding interfaces
+        @provisionBonding(vmdata)
         return callback
             "id" : vmdata.id
             "status" : "provisioned"
+
+    provisionBonding : (vmdata)->
+        bondindex = 0
+        for lag in vmdata.lagmap
+            bonddata =
+                "bondname": "bond#{bondindex}"
+                "ipaddress": lag.ipaddress
+                "interfaces":[lag.lagif1,lag.lagif2]
+            bondindex++
+            client = request.newClient("http://#{vmdata.mgmtip}:5051")
+            client.post "/bonding", bonddata , (err, res, body) =>
+                console.log "Post Bonding API Error  %s ", err if err?            
+                console.log "PosT Bonding API result body %s " , JSON.stringify body
 
     stop:(id,callback) ->
         vmdata = @registry.get id
@@ -270,7 +286,6 @@ class VmBuilder
             ripconf += "   network #{i.ipaddress}/24 \n" unless i.type is "mgmt"
         util.log "ripconffile " + ripconf
         return ripconf
-
 
 
 module.exports = new VmBuilder
