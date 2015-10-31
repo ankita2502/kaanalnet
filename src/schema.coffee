@@ -38,6 +38,11 @@ NodeSchema =
                     config : 
                         type: "object"
                         required: false		
+        lagmap:
+            type : "array"
+            items:
+                type :"object"
+                
 TestSchema =
     name: "Test"
     type: "object"        
@@ -115,6 +120,8 @@ TopologySchema =
                             required: false
                             properties:
                                 name:{"type":"string", "required":true}
+                                lag:{"type":"boolean", "required":false}
+
 
 module.exports.topologyschema = TopologySchema
 module.exports.switchschema = SwitchSchema

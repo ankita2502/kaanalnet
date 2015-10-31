@@ -1,6 +1,7 @@
 Vm = require('lxcdriver')
 util = require('util')
 netem = require('linuxtcdriver')
+request = require('request-json')
 #===============================================================================================#
 
 keystore = require('mem-db')
@@ -57,6 +58,17 @@ class VmBuilder
                         text = "\nauto #{x.ifname}\niface #{x.ifname} inet static \n\t address #{x.ipaddress} \n\t netmask #{x.netmask} \n\t gateway #{x.gateway}\n"
                         vmobj.appendFile("/etc/network/interfaces",text)    
                     #write in to db
+
+            #processing the lag intefaces array
+            if data.lagmap?
+                for x in data.lagmap
+                    vmobj.addEthernetInterface(x.veth1,x.hwAddress1)
+                    vmobj.addEthernetInterface(x.veth2,x.hwAddress2)
+                    text = "\nauto #{x.lagif1}\niface #{x.lagif1} inet static \n\t address 0.0.0.0 \n\t netmask 255.255.255.0 \n"
+                    vmobj.appendFile("/etc/network/interfaces",text)                    
+                    text = "\nauto #{x.lagif2}\niface #{x.lagif2} inet static \n\t address 0.0.0.0 \n\t netmask 255.255.255.0 \n"
+                    vmobj.appendFile("/etc/network/interfaces",text)                                        
+
             #vmdata.data.id = vmdata.id
             data.status = vmobj.state #"created"
             #default router protocol ospf if not mentioned
@@ -99,9 +111,24 @@ class VmBuilder
         vmobj = @vmobjs[id]        
         return callback new Error "vm obj not found" unless vmobj?
         #Todo - provisioning routines to be placed here
+        # provision the LAG Bonding interfaces
+        @provisionBonding(vmdata)
         return callback
             "id" : vmdata.id
             "status" : "provisioned"
+
+    provisionBonding : (vmdata)->
+        bondindex = 0
+        for lag in vmdata.lagmap
+            bonddata =
+                "bondname": "bond#{bondindex}"
+                "ipaddress": lag.ipaddress
+                "interfaces":[lag.lagif1,lag.lagif2]
+            bondindex++
+            client = request.newClient("http://#{vmdata.mgmtip}:5051")
+            client.post "/bonding", bonddata , (err, res, body) =>
+                console.log "Post Bonding API Error  %s ", err if err?            
+                console.log "PosT Bonding API result body %s " , JSON.stringify body
 
     stop:(id,callback) ->
         vmdata = @registry.get id
@@ -259,7 +286,6 @@ class VmBuilder
             ripconf += "   network #{i.ipaddress}/24 \n" unless i.type is "mgmt"
         util.log "ripconffile " + ripconf
         return ripconf
-
 
 
 module.exports = new VmBuilder

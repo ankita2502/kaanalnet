@@ -236,6 +236,18 @@ class Topology
                     if obj?
                         obj.connect ifmap.veth , (res) =>
                             log.info "Link connect result" + JSON.stringify res
+            #lag interfaces
+            for lagmap in n.config.lagmap
+                console.log "procesisng lagmap "
+                console.log lagmap
+                if lagmap.veth1?
+                    obj = @getSwitchObjbyName(lagmap.brname)
+                    if obj is null
+                        assert "switch object #{swn.name} is not present in switch object array...failed in createnodelinks function"    
+                    if obj?
+                        obj.connect lagmap.veth1 , (res) =>                            
+                            obj.connect lagmap.veth2 , (res) =>
+                                log.info "Link connect result" + JSON.stringify res
             callback()             
         ,(err) =>
             if err
@@ -352,7 +364,8 @@ class Topology
                         else
                             startaddress = temp.iparray[x++]  
                         log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config)
+                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) unless  n.lag?
+                        obj.addLagInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) if  n.lag?
                         log.info "Topology - #{obj.config.name} added the Lan interface" 
         
     buildInterSwitchLink:(val)->

@@ -15,8 +15,10 @@ Schema = require('./../schema').switchschema
 class SwitchBuilder
 	#@records = []
 	bridge = null
+	#@dpid = 1
 
 	constructor: () ->		
+		@dpid = 10
 		@registry = new keystore "switch",Schema
 
 	list : (callback) ->
@@ -84,6 +86,11 @@ class SwitchBuilder
 					util.log result
 					bridge.setOFVersion sdata.name, sdata.ofversion, (res) =>
 						util.log res
+						val = "00000000000000" + @dpid
+						bridge.setDPid sdata.name, val, (res) =>
+							@dpid++
+							util.log res
+
 		else
 			bridge  = brctl
 
