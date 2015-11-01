@@ -1,7 +1,7 @@
 {
 	"name": "kaanalnet",
 	"description": "Virtual Network Emulator Lab for SDN and traditional networks ",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"author": "Suresh Kumar",	
 	"repository": {
 		"type": "git",
@@ -17,11 +17,11 @@
 	"log":"1.4.0",
 	"json-schema":"0.2.2",
 	"assert":"1.3.0",
-	"lxcdriver":"0.0.2",
+	"lxcdriver":"0.0.3",
 	"ovsdriver":"0.0.3",
-	"brctldriver":"0.0.1",
+	"brctldriver":"0.0.2",
 	"linuxtcdriver":"0.0.3",
-	"mem-db":"0.0.1",
+	"mem-db":"0.0.2",
 	"jfs":"0.2.6"
 	},
 	"devDependencies": {
