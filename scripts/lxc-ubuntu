@@ -577,7 +577,7 @@ EOF
         echo "Installing packages: ${packages}"
         install_packages $rootfs $packages
     fi
-    install_packages $rootfs nodejs npm quagga iperf telnet tcpdump
+    install_packages $rootfs nodejs npm quagga iperf telnet
 
     install_npmpackages $rootfs "testagent"
     # Set initial timezone as on host
@@ -597,6 +597,11 @@ EOF
     #chroot $rootfs npm cache clean 
     chroot $rootfs apt-get -y autoclean
     chroot $rootfs apt-get -y clean
+
+    #enable the sudo access to the ubuntu user
+    #root    ALL=(ALL:ALL) ALL
+    #filename /etc/sudoers
+    echo "ubuntu    ALL=(ALL:ALL) ALL" >> $rootfs/etc/sudoers
 
     # rmdir /dev/shm for containers that have /run/shm
     # I'm afraid of doing rm -rf $rootfs/dev/shm, in case it did
