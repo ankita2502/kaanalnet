@@ -256,7 +256,7 @@ class VmBuilder
 
     buildZebraConfig :(vmdata)->
         #updating the zebra config file
-        zebraconf = "hostname zebra \npassword zebra \nenable password zebra \n"
+        zebraconf = "hostname zebra \npassword zebra \nenable password zebra \n log file /tmp/zebra.log debugging \n"
         for i in vmdata.ifmap
             zebraconf += "interface  #{i.ifname} \n"            
             zebraconf += "   ip address #{i.ipaddress}/29 \n" if i.type is "wan"
@@ -266,7 +266,7 @@ class VmBuilder
         return zebraconf
 
     buildOspfConfig :(vmdata)->
-        ospfconf = "hostname zebra \npassword zebra \nenable password zebra \nrouter ospf\n  "
+        ospfconf = "hostname zebra \npassword zebra \nenable password zebra \n log file /tmp/ospf.log debugging \n router ospf\n  "
         for i in vmdata.ifmap
             ospfconf += "   network #{i.ipaddress}/24 area 0 \n" unless i.type is "mgmt"
         util.log "ospfconffile " + ospfconf
@@ -281,7 +281,7 @@ class VmBuilder
 
 
     buildRipConfig :(vmdata)->
-        ripconf = "hostname zebra \npassword zebra \nenable password zebra \nrouter rip\n  "
+        ripconf = "hostname zebra \npassword zebra \nenable password zebra \n log file /tmp/rip.log debugging \n  router rip\n  "
         for i in vmdata.ifmap
             ripconf += "   network #{i.ipaddress}/24 \n" unless i.type is "mgmt"
         util.log "ripconffile " + ripconf
