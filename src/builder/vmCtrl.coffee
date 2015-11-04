@@ -245,6 +245,10 @@ class VmBuilder
                 else
                     console.log "default case"
 
+            #write the bgp conf for ODLBGP integreation
+            bgpconf = @buildBgpConfig(vmdata)  
+            vmobj.appendFile("/etc/bgp.conf",bgpconf)
+
             util.log "its router- to be returned here"
             return
         else
@@ -273,10 +277,10 @@ class VmBuilder
         return ospfconf
 
     buildBgpConfig :(vmdata)->
-        bgpconf = "hostname zebra \npassword zebra \nenable password zebra \nrouter bgp 1\n  "
-        for i in vmdata.ifmap
-            bgpconf += "   network #{i.ipaddress}/24  \n" unless i.type is "mgmt"
-        util.log "bgpconffile " + bgpconf
+        bgpconf = "hostname zebra \npassword zebra \nenable password zebra \nlog file /tmp/bgp.log debugging  \nrouter bgp 1\n    bgp router-id #{vmdata.mgmtip}\n    neighbor 10.0.3.1 remote-as 1\n    redistribute connected \n    redistribute ospf\n    redistribute rip\n"
+        #for i in vmdata.ifmap
+        #    bgpconf += "   network #{i.ipaddress}/24  \n" unless i.type is "mgmt"
+        #util.log "bgpconffile " + bgpconf
         return bgpconf        
 
 
