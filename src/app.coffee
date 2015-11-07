@@ -72,7 +72,7 @@ systemcheck = ()->
         (callback)=>
             log.info "SYSTEMCHECK : Checking the OpenVSwitch..."  
             ovs = require('ovsdriver')
-            testbridge = "testbridge"
+            testbridge = "testbridge1"
             ovs.createBridge testbridge,(result)=>  
                 if result is true
                     log.info "SYSTEMCHECK: OpenVSwitch #{testbridge} creation success -- PASSED" 
@@ -80,8 +80,17 @@ systemcheck = ()->
                     callback(null,"OpenVSwitch Check success") 
                 else
                     log.error "SYSTEMCHECK: OpenVSwitch #{testbridge} creation Failure ..Failed" 
-                    callback new Error ('OpenVSwitch check failed')            
-
+                    callback new Error ('OpenVSwitch check failed')
+        ,
+        (callback)=>
+            log.info "SYSTEMCHECK : Loading the Linux Bonding Module for Link Aggregation feature..."  
+            enableBonding = require('./utils/bonding')            
+            enableBonding (result)=>  
+                if result is true
+                    log.info "SYSTEMCHECK: Loaded bonding driver success -- PASSED" 
+                else
+                    log.info "SYSTEMCHECK: Loaded bonding driver failure -- FAILED" 
+                callback(null,"bonding driver loading -completed")                     
         ],
         (err,result)=>
             log.info "SYSTEMCHECK -  result is  %s ", result

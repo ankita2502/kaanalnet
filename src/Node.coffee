@@ -53,13 +53,14 @@ class node
         @ifmap.push  interf
         @lanip = ipaddress
 
-    addLagInterface :(brname,ipaddress,subnetmask,gateway,characterstics)->
+    addLagInterface :(brname,bondname,ipaddress,subnetmask,gateway,characterstics)->
         lagif1 = "eth#{@ifindex}"
         veth1 = "#{@config.name}_veth#{@ifindex}"
         @ifindex++
         lagif2 = "eth#{@ifindex}"
         veth2 = "#{@config.name}_veth#{@ifindex}"
         lagif =
+            "bondname" : bondname
             "lagif1" : lagif1
             "hwAddress1" : getHwAddress()
             "veth1" : veth1

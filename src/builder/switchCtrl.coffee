@@ -18,7 +18,7 @@ class SwitchBuilder
 	#@dpid = 1
 
 	constructor: () ->		
-		@dpid = 10
+		
 		@registry = new keystore "switch",Schema
 
 	list : (callback) ->
@@ -81,14 +81,14 @@ class SwitchBuilder
 		return callback new Error "Switch details not found in DB" unless sdata?
 		if sdata.make is "openvswitch"
 			bridge  = ovs
-			if sdata.controller?
+			if sdata.controller?				
 				bridge.setController sdata.name, sdata.controller, (result) =>
 					util.log result
 					bridge.setOFVersion sdata.name, sdata.ofversion, (res) =>
 						util.log res
-						val = "00000000000000" + @dpid
+						val = "00000000000000" + sdata.datapathid
 						bridge.setDPid sdata.name, val, (res) =>
-							@dpid++
+							#@dpid++
 							util.log res
 
 		else

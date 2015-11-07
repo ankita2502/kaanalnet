@@ -27,7 +27,8 @@ TopologySchema = require('./schema').topologyschema
 
 x = 0
 sindex = 1
-
+dpid = 10
+bondindex = 0
 #============================================================================================================
 class Topology   
 
@@ -102,7 +103,8 @@ class Topology
                 cb (true)
 
     startSwitches :(cb)->
-        async.each @switchobj, (sw,callback) =>
+        #purposefully runnin in each series 
+        async.eachSeries @switchobj, (sw,callback) =>
             log.info "starting a switch " + sw.config.name
             sw.start (result) =>   
                 #Todo : Result vaue to be checked.
@@ -315,6 +317,7 @@ class Topology
             for sw in @config.switches   
                 sw.make = @sysconfig.switchtype
                 sw.ofversion = @sysconfig.ofversion
+                sw.datapathid = dpid++
                 #sw.ports = 2
                 unless sw.type is "wan"
                     sw.controller = @sysconfig.controller if @sysconfig.controller?
@@ -364,8 +367,12 @@ class Topology
                         else
                             startaddress = temp.iparray[x++]  
                         log.info "Topology -  #{obj.config.name} Lan address " + startaddress
-                        obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) unless  n.lag?
-                        obj.addLagInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) if  n.lag?
+                        unless  n.lag?
+                            obj.addLanInterface(sw.name, startaddress, temp.subnetMask, temp.firstAddress, n.config) 
+                        else    
+                            bondname = "bond#{bondindex}"
+                            obj.addLagInterface(sw.name,bondname, startaddress, temp.subnetMask, temp.firstAddress, n.config) 
+                            bondindex++
                         log.info "Topology - #{obj.config.name} added the Lan interface" 
         
     buildInterSwitchLink:(val)->
@@ -494,15 +501,20 @@ class Topology
                     log.info "TOPOLOGY - CONFIG INTER SWITCH LINK  CHARS RESULT "  + res
                     callback(null,"CONFIG INTERSWITCH LINK CHAR success") if res is true
                     callback new Error ('CONFIG INTERSWITCH  LINK CHARS failed')  unless res is true              
+
             (callback)=>
-                log.info "TOPOLOGY - Provisioning the nodes "   
-                @provisionnodes (res)=>
-                    log.info "TOPOLOGY - Provisioning the nodes "  + res
-                    callback(null,"node provisoning  success") if res is true
-                    callback new Error ('node provisioning failed')  unless res is true
+                log.info "TOPOLOGY - Provisioning the nodes " 
+                console.log "Waiting for 10 secs before provisioning"
+                setTimeout(()=>                        
+                    @provisionnodes (res)=>
+                        log.info "TOPOLOGY - Provisioning the nodes "  + res
+                        callback(null,"node provisoning  success") if res is true
+                        callback new Error ('node provisioning failed')  unless res is true
+                ,10000)
             ],
             (err,result)=>
                 log.info "TOPOLOGY -  RUN result is  %s ", result
+                console.log "TOPOLOGY -  RUN result is  ", result
         )
 
     del :()->

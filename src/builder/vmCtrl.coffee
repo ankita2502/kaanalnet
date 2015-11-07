@@ -121,7 +121,7 @@ class VmBuilder
         bondindex = 0
         for lag in vmdata.lagmap
             bonddata =
-                "bondname": "bond#{bondindex}"
+                "bondname": lag.bondname
                 "ipaddress": lag.ipaddress
                 "interfaces":[lag.lagif1,lag.lagif2]
             bondindex++
