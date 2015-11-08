@@ -47,7 +47,7 @@ enableBonding = (callback)->
                 command = "echo \"+#{ifname}\" > /sys/class/net/bonding_masters"
                 execute command,(result)=>
                     #callback new Error ('attaching  interface failed ') if result instanceof Error
-                    callback new Error 'create bond interface failed' if result is false 
+                    #callback new Error 'create bond interface failed' if result is false 
                     command = "echo \"4\" > /sys/class/net/#{ifname}/bonding/mode"
                     execute command,(result)=>
                         console.log "Result ", result
