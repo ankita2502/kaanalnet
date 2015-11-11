@@ -1,3 +1,14 @@
+Release 0.2.0
+-------------
+Features:
+a. ODL BGP Application Integreation
+b. Link Aggreation(Bonding) feature 
+c. ODL LACP Application Integreation
+d. Device(Bridge) - stop, start, delete support via REST API
+e. telnet package added in the container, to login to routing protocol
+f. Router - Rip protocol support included 
+
+
 Release 0.1.1
 -------------
 Features:
