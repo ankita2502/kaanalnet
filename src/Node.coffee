@@ -61,6 +61,7 @@ class node
         veth2 = "#{@config.name}_veth#{@ifindex}"
         lagif =
             "bondname" : bondname
+            "bondmac"  : getHwAddress()
             "lagif1" : lagif1
             "hwAddress1" : getHwAddress()
             "veth1" : veth1
