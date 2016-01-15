@@ -219,6 +219,31 @@ class VmBuilder
                 #text = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n /usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
                 vmobj.appendFile("/etc/init.d/rc.local",text)            
 
+        #lag interfaces
+        if vmdata.lagmap?
+            for x in vmdata.lagmap
+                util.log "VmCtrl - LAG interface setlinkchars" + JSON.stringify x
+                if x.config?
+                    #host side configuration
+                    Netem =  new netem(x.lagif1,x.config)                        
+                    console.log Netem.commands
+                    text = " "
+                    for command in Netem.commands
+                        console.log "command ", command
+                        text += "\n #{command}"
+                    text += "\n"
+
+                    Netem1 = new netem(x.lagif2,x.config)
+                    console.log Netem1.commands                        
+                    for command in Netem1.commands
+                        console.log "command ", command
+                        text += "\n #{command}"
+                    text += "\n"
+
+                    console.log "string command ", text
+                    #text = "\n/usr/lib/quagga/zebra -f /etc/zebra.conf -d & \n /usr/lib/quagga/ospfd -f /etc/ospf.conf -d & \n"
+                    vmobj.appendFile("/etc/init.d/rc.local",text)    
+
         if vmdata.type is "router"
             util.log 'its router'
 
